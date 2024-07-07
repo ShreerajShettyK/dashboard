@@ -46,6 +46,12 @@ func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data := models.GitMetricsViewData{
+		Metrics: metrics,
+		Repos:   nil,
+		Authors: nil,
+	}
+
 	// Use the relative path
 	tmplPath := "internal/templates/git_dashboard.html"
 	// log.Println("Template Path:", tmplPath) // Debug print
@@ -57,7 +63,7 @@ func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Execute the template with metrics data
-	if err := tmpl.Execute(w, metrics); err != nil {
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -1,46 +1,3 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Git Metrics Dashboard</title>
-</head>
-<body>
-    <h1>Git Metrics</h1>
-    <table border="1">
-        <tr>
-            <th>Repo Name</th>
-            <th>Commit ID</th>
-            <th>Commit Date</th>
-            <th>Committed By</th>
-            <th>Commit Message</th>
-            <th>Files Added</th>
-            <th>Files Deleted</th>
-            <th>Files Updated</th>
-            <th>Lines Added</th>
-            <th>Lines Updated</th>
-            <th>Lines Deleted</th>
-        </tr>
-        {{range .}}
-        <tr>
-            <td>{{.RepoName}}</td>
-            <td>{{.CommitID}}</td>
-            <td>{{.CommitDate}}</td>
-            <td>{{.CommittedBy}}</td>
-            <td>{{.CommitMessage}}</td>
-            <td>{{.FilesAdded}}</td>
-            <td>{{.FilesDeleted}}</td>
-            <td>{{.FilesUpdated}}</td>
-            <td>{{.LinesAdded}}</td>
-            <td>{{.LinesUpdated}}</td>
-            <td>{{.LinesDeleted}}</td>
-        </tr>
-        {{end}}
-    </table>
-</body>
-</html> -->
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,6 +6,9 @@
 </head>
 <body>
     <h1>Git Metrics Dashboard</h1>
+    
+    {{ if .Metrics }}
+    <h2>Commits</h2>
     <table border="1">
         <tr>
             <th>Commit ID</th>
@@ -63,7 +23,7 @@
             <th>Lines Deleted</th>
             <th>Lines Updated</th>
         </tr>
-        {{ range . }}
+        {{ range .Metrics }}
         <tr>
             <td>{{ .CommitID }}</td>
             <td>{{ .CommitDate }}</td>
@@ -79,5 +39,35 @@
         </tr>
         {{ end }}
     </table>
+    {{ end }}
+    
+    {{ if .Repos }}
+    <h2>All Repositories</h2>
+    <table border="1">
+        <tr>
+            <th>Repository Name</th>
+        </tr>
+        {{ range .Repos }}
+        <tr>
+            <td>{{ . }}</td>
+        </tr>
+        {{ end }}
+    </table>
+    {{ end }}
+
+    {{ if .Authors }}
+    <h2>All Authors</h2>
+    <table border="1">
+        <tr>
+            <th>User Name</th>
+        </tr>
+        {{ range .Authors }}
+        <tr>
+            <td>{{ . }}</td>
+        </tr>
+        {{ end }}
+    </table>
+    {{ end }}
+
 </body>
 </html>
