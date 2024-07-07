@@ -1,23 +1,98 @@
+// package handlers
+
+// import (
+// 	"context"
+// 	"dashboard/cmd/api/routes/internal/database"
+// 	"dashboard/cmd/api/routes/internal/models"
+// 	"html/template"
+// 	"net/http"
+
+// 	"go.mongodb.org/mongo-driver/bson"
+// 	"go.mongodb.org/mongo-driver/mongo/options"
+// )
+
+// func FetchGitMetrics(userName, repoName string) ([]models.GitMetric, error) {
+// 	filter := bson.M{
+// 		"user_name": userName,
+// 		"repo_name": repoName,
+// 	}
+// 	opts := options.Find().SetSort(bson.D{{Key: "commit_date", Value: -1}})
+
+// 	cursor, err := database.GitMetricsCollection.Find(context.Background(), filter, opts)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer cursor.Close(context.Background())
+
+// 	var metrics []models.GitMetric
+// 	for cursor.Next(context.Background()) {
+// 		var metric models.GitMetric
+// 		if err := cursor.Decode(&metric); err != nil {
+// 			return nil, err
+// 		}
+// 		metrics = append(metrics, metric)
+// 	}
+// 	return metrics, nil
+// }
+
+// func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
+// 	userName := r.URL.Query().Get("user_name")
+// 	repoName := r.URL.Query().Get("repo_name")
+
+// 	metrics, err := FetchGitMetrics(userName, repoName)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Use the relative path
+// 	tmplPath := "internal/templates/git_dashboard.html"
+
+// 	tmpl, err := template.ParseFiles(tmplPath)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Execute the template with metrics data
+// 	if err := tmpl.Execute(w, metrics); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// }
+
 package handlers
 
 import (
+	"context"
+	"dashboard/cmd/api/routes/internal/database"
 	"dashboard/cmd/api/routes/internal/models"
 	"html/template"
+	"log"
 	"net/http"
+	"os"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func FetchGitMetrics(userName, repoName string) ([]models.GitMetric, error) {
-	query := `SELECT id, repo_name, user_name, commit_id, commit_date, lines_added, lines_deleted, files_added, files_deleted FROM git_metrics WHERE user_name = ? AND repo_name = ?`
-	rows, err := database.DB.Query(query, userName, repoName)
+	filter := bson.M{
+		"commited_by": userName,
+		"reponame":    repoName,
+	}
+	opts := options.Find().SetSort(bson.D{{Key: "commit_date", Value: -1}})
+
+	cursor, err := database.GitMetricsCollection.Find(context.Background(), filter, opts)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer cursor.Close(context.Background())
 
 	var metrics []models.GitMetric
-	for rows.Next() {
+	for cursor.Next(context.Background()) {
 		var metric models.GitMetric
-		if err := rows.Scan(&metric.ID, &metric.RepoName, &metric.UserName, &metric.CommitID, &metric.CommitDate, &metric.LinesAdded, &metric.LinesDeleted, &metric.FilesAdded, &metric.FilesDeleted); err != nil {
+		if err := cursor.Decode(&metric); err != nil {
 			return nil, err
 		}
 		metrics = append(metrics, metric)
@@ -35,10 +110,27 @@ func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.ParseFiles("templates/dashboard.html")
+	// Print the current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Println("Error getting current working directory:", err)
+	} else {
+		log.Println("Current working directory:", cwd)
+	}
+
+	// Use the relative path
+	tmplPath := "internal/templates/git_dashboard.html"
+	log.Println("Template Path:", tmplPath) // Debug print
+
+	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w, metrics)
+
+	// Execute the template with metrics data
+	if err := tmpl.Execute(w, metrics); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

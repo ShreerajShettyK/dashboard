@@ -1,0 +1,83 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Metrics Dashboard</title>
+</head>
+<body>
+    <h1>Git Metrics</h1>
+    <table border="1">
+        <tr>
+            <th>Repo Name</th>
+            <th>Commit ID</th>
+            <th>Commit Date</th>
+            <th>Committed By</th>
+            <th>Commit Message</th>
+            <th>Files Added</th>
+            <th>Files Deleted</th>
+            <th>Files Updated</th>
+            <th>Lines Added</th>
+            <th>Lines Updated</th>
+            <th>Lines Deleted</th>
+        </tr>
+        {{range .}}
+        <tr>
+            <td>{{.RepoName}}</td>
+            <td>{{.CommitID}}</td>
+            <td>{{.CommitDate}}</td>
+            <td>{{.CommittedBy}}</td>
+            <td>{{.CommitMessage}}</td>
+            <td>{{.FilesAdded}}</td>
+            <td>{{.FilesDeleted}}</td>
+            <td>{{.FilesUpdated}}</td>
+            <td>{{.LinesAdded}}</td>
+            <td>{{.LinesUpdated}}</td>
+            <td>{{.LinesDeleted}}</td>
+        </tr>
+        {{end}}
+    </table>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Git Metrics Dashboard</title>
+</head>
+<body>
+    <h1>Git Metrics Dashboard</h1>
+    <table border="1">
+        <tr>
+            <th>Commit ID</th>
+            <th>Commit Date</th>
+            <th>Commit Message</th>
+            <th>Committed By</th>
+            <th>Repo Name</th>
+            <th>Files Added</th>
+            <th>Files Deleted</th>
+            <th>Files Updated</th>
+            <th>Lines Added</th>
+            <th>Lines Deleted</th>
+            <th>Lines Updated</th>
+        </tr>
+        {{ range . }}
+        <tr>
+            <td>{{ .CommitID }}</td>
+            <td>{{ .CommitDate }}</td>
+            <td>{{ .CommitMessage }}</td>
+            <td>{{ .CommittedBy }}</td>
+            <td>{{ .RepoName }}</td>
+            <td>{{ .FilesAdded }}</td>
+            <td>{{ .FilesDeleted }}</td>
+            <td>{{ .FilesUpdated }}</td>
+            <td>{{ .LinesAdded }}</td>
+            <td>{{ .LinesDeleted }}</td>
+            <td>{{ .LinesUpdated }}</td>
+        </tr>
+        {{ end }}
+    </table>
+</body>
+</html>

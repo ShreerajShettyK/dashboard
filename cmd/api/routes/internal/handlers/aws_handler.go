@@ -1,24 +1,38 @@
 package handlers
 
 import (
+	"context"
+	"dashboard/cmd/api/routes/internal/database"
 	"dashboard/cmd/api/routes/internal/models"
 	"html/template"
 	"net/http"
+	"path/filepath"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func FetchAWSMetrics(serviceName string, startDate, endDate time.Time) ([]models.AWSMetric, error) {
-	query := `SELECT id, service_name, metric_name, value, timestamp FROM aws_metrics WHERE service_name = ? AND timestamp BETWEEN ? AND ?`
-	rows, err := database.DB.Query(query, serviceName, startDate, endDate)
+	filter := bson.M{
+		"service_name": serviceName,
+		"timestamp": bson.M{
+			"$gte": startDate,
+			"$lte": endDate,
+		},
+	}
+	opts := options.Find().SetSort(bson.D{{"timestamp", 1}})
+
+	cursor, err := database.AWSMetricsCollection.Find(context.Background(), filter, opts)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer cursor.Close(context.Background())
 
 	var metrics []models.AWSMetric
-	for rows.Next() {
+	for cursor.Next(context.Background()) {
 		var metric models.AWSMetric
-		if err := rows.Scan(&metric.ID, &metric.ServiceName, &metric.MetricName, &metric.Value, &metric.Timestamp); err != nil {
+		if err := cursor.Decode(&metric); err != nil {
 			return nil, err
 		}
 		metrics = append(metrics, metric)
@@ -40,7 +54,13 @@ func AWSMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.ParseFiles("templates/dashboard.html")
+	tmplPath, err := filepath.Abs("templates/git_dashboard.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
