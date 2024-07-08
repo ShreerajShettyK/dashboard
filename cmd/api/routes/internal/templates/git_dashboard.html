@@ -11,13 +11,49 @@
         table{
             background-color: rgb(214, 222, 255);
         }
+        .breadcrumbs {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+        .breadcrumbs li {
+            display: inline;
+            margin-right: 5px;
+        }
+        .breadcrumbs li a {
+            text-decoration: none;
+            color: blue;
+        }
+        .breadcrumbs li a:hover {
+            text-decoration: underline;
+        }
+        .breadcrumbs li::after {
+            content: ">>";
+            margin-left: 5px;
+        }
+        .breadcrumbs li:last-child::after {
+            content: "";
+        }
     </style>
 </head>
 <body>
     <h1>Git Metrics Dashboard</h1>
 
+    <ul class="breadcrumbs">
+        <li><a href="/git_metrics/home">Home</a></li>
+        {{ if .Metrics }}
+        <li><a href="/git_metrics/home/commits">Commits</a></li>
+        {{ end }}
+        {{ if .Repos }}
+        <li><a href="/git_metrics/home/repos">Repos</a></li>
+        {{ end }}
+        {{ if .Authors }}
+        <li><a href="/git_metrics/home/authors">Authors</a></li>
+        {{ end }}
+    </ul>
+
     {{ if and .Repos .Authors }}
-    <form method="get" action="/git_metrics">
+    <form method="get" action="/git_metrics/home/commits">
         <div>
             <label for="repo_name">Select Repository:</label>
             <select name="repo_name" id="repo_name">

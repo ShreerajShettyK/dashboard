@@ -3,7 +3,6 @@ package handlers
 import (
 	"dashboard/cmd/api/routes/internal/models"
 	"html/template"
-	"log"
 	"net/http"
 )
 
@@ -39,5 +38,4 @@ func GitHomeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	log.Println("Fetched authors")
 }

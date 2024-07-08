@@ -5,7 +5,6 @@ import (
 	"dashboard/cmd/api/routes/internal/database"
 	"dashboard/cmd/api/routes/internal/models"
 	"html/template"
-	"log"
 	"net/http"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -67,5 +66,4 @@ func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	log.Println("Fetched records")
 }
