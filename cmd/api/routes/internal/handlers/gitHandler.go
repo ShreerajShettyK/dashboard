@@ -12,9 +12,12 @@ import (
 )
 
 func FetchGitMetrics(userName, repoName string) ([]models.GitMetric, error) {
-	filter := bson.M{
-		"commited_by": userName,
-		"reponame":    repoName,
+	filter := bson.M{}
+	if userName != "None" {
+		filter["commited_by"] = userName
+	}
+	if repoName != "None" {
+		filter["reponame"] = repoName
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "commit_date", Value: -1}})
 
@@ -51,9 +54,7 @@ func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		Authors: nil,
 	}
 
-	// Use the relative path
 	tmplPath := "internal/templates/git_dashboard.html"
-	// log.Println("Template Path:", tmplPath) // Debug print
 
 	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
@@ -61,7 +62,6 @@ func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Execute the template with metrics data
 	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

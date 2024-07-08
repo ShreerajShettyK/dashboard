@@ -57,6 +57,7 @@
         <div>
             <label for="repo_name">Select Repository:</label>
             <select name="repo_name" id="repo_name">
+                <option value="None">None</option>
                 {{ range .Repos }}
                 <option value="{{ . }}">{{ . }}</option>
                 {{ end }}
@@ -65,6 +66,7 @@
         <div>
             <label for="user_name">Select User:</label>
             <select name="user_name" id="user_name">
+                <option value="None">None</option>
                 {{ range .Authors }}
                 <option value="{{ . }}">{{ . }}</option>
                 {{ end }}
