@@ -19,7 +19,9 @@ type GitMetric struct {
 
 // GitMetricsViewData holds the data for rendering the Git metrics view
 type GitMetricsViewData struct {
-	Metrics []GitMetric
-	Repos   []string
-	Authors []string
+	Metrics           []GitMetric
+	Repos             []string
+	Authors           []string
+	RepoNameParameter string
+	UserNameParameter string
 }

@@ -49,9 +49,11 @@ func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := models.GitMetricsViewData{
-		Metrics: metrics,
-		Repos:   nil,
-		Authors: nil,
+		Metrics:           metrics,
+		Repos:             nil,
+		Authors:           nil,
+		RepoNameParameter: repoName,
+		UserNameParameter: userName,
 	}
 
 	tmplPath := "internal/templates/git_dashboard.html"

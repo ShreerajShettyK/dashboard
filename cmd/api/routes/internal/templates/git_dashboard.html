@@ -79,7 +79,7 @@
     {{ end }}
     
     {{ if .Metrics }}
-    <h2>
+    <!-- <h2>
         All Commits made by 
         {{ range $index, $element := .Metrics }}
             {{ if eq $index 0 }}
@@ -87,7 +87,19 @@
                 <span style="color: red;">{{ $element.RepoName }}</span> repository:
             {{ end }}
         {{ end }}
+    </h2> -->
+    <h2>
+        {{ if and (eq .UserNameParameter "None") (eq .RepoNameParameter "None") }}
+            All Commits:
+        {{ else if eq .RepoNameParameter "None" }}
+            All Commits made by <span style="color: red;">{{ (index .Metrics 0).CommittedBy }}</span>:
+        {{ else if eq .UserNameParameter "None" }}
+            All Commits made on <span style="color: red;">{{ (index .Metrics 0).RepoName }}</span> repository:
+        {{ else }}
+            All Commits made by <span style="color: red;">{{ (index .Metrics 0).CommittedBy }}</span> on <span style="color: red;">{{ (index .Metrics 0).RepoName }}</span> repository:
+        {{ end }}
     </h2>
+    
     <table border="1">
         <tr>
             <th>Commit ID</th>
