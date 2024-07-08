@@ -51,6 +51,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/aws_metrics", handlers.AWSMetricsHandler).Methods("GET")
 	r.HandleFunc("/git_metrics", handlers.GitMetricsHandler).Methods("GET")
+	r.HandleFunc("/git_metrics/home", handlers.GitHomeHandler).Methods("GET")
 	r.HandleFunc("/git_metrics/repos", handlers.GitReposHandler).Methods("GET")
 	r.HandleFunc("/git_metrics/authors", handlers.GitAuthorsHandler).Methods("GET")
 

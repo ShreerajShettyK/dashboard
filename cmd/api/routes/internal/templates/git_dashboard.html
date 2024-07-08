@@ -3,12 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <title>Git Metrics Dashboard</title>
+    <style>
+        form div {
+            display: inline-block;
+            margin-right: 30px;
+        }
+        table{
+            background-color: rgb(214, 222, 255);
+        }
+    </style>
 </head>
 <body>
     <h1>Git Metrics Dashboard</h1>
+
+    {{ if and .Repos .Authors }}
+    <form method="get" action="/git_metrics">
+        <div>
+            <label for="repo_name">Select Repository:</label>
+            <select name="repo_name" id="repo_name">
+                {{ range .Repos }}
+                <option value="{{ . }}">{{ . }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div>
+            <label for="user_name">Select User:</label>
+            <select name="user_name" id="user_name">
+                {{ range .Authors }}
+                <option value="{{ . }}">{{ . }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div>
+            <button type="submit" style="background-color: rgb(74, 74, 255);color: white;padding: 5px;border-radius: 5px;border-color: white;">Commit Records!!</button>
+        </div>
+    </form>
+    {{ end }}
     
     {{ if .Metrics }}
-    <h2>Commits</h2>
+    <h2>
+        All Commits made by 
+        {{ range $index, $element := .Metrics }}
+            {{ if eq $index 0 }}
+                <span style="color: red;">{{ $element.CommittedBy }}</span> on
+                <span style="color: red;">{{ $element.RepoName }}</span> repository:
+            {{ end }}
+        {{ end }}
+    </h2>
     <table border="1">
         <tr>
             <th>Commit ID</th>
