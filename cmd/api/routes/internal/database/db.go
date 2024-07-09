@@ -13,7 +13,6 @@ var Client *mongo.Client
 var AWSMetricsCollection *mongo.Collection
 var GitMetricsCollection *mongo.Collection
 
-// InitDB initializes the MongoDB client and collections.
 func InitDB(uri, dbName string) {
 	// Set a timeout for the connection context
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
