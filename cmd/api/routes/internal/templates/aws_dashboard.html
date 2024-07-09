@@ -42,8 +42,8 @@
     {{ if .Services }}
     <form method="get" action="/aws_metrics/home/resources">
         <div>
-            <label for="repo_name">Select AWS Service(ec2,elb,rds):</label>
-            <select name="repo_name" id="repo_name">
+            <label for="service_name">Select AWS Service:</label>
+            <select name="service_name" id="service_name">
                 <option value="None">None</option>
                 {{ range .Services }}
                 <option value="{{ . }}">{{ . }}</option>
@@ -51,48 +51,50 @@
             </select>
         </div>
         <div>
-            <label for="user_name">Select month and year to calculate the average consumption and cost:</label>
-            <select name="user_name" id="user_name">
-                <option value="None">None</option>
-                {{ range .Authors }}
-                <option value="{{ . }}">{{ . }}</option>
-                {{ end }}
-            </select>
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date">
         </div>
         <div>
-            <button type="submit" style="background-color: rgb(74, 74, 255);color: white;padding: 5px;border-radius: 5px;border-color: white;">Commit Records!!</button>
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date">
+        </div>
+        <div>
+            <button type="submit" style="background-color: rgb(74, 74, 255);color: white;padding: 5px;border-radius: 5px;border-color: white;">Fetch Metrics</button>
         </div>
     </form>
     {{ end }}
     
     {{ if .Metrics }}
+    <h2>
+        {{ if eq .ServiceName "None" }}
+            All AWS Metrics:
+        {{ else }}
+            Metrics for <span style="color: red;">{{ .ServiceName }}</span> from <span style="color: red;">{{ .StartDate }}</span> to <span style="color: red;">{{ .EndDate }}</span>:
+        {{ end }}
+    </h2>
     <table border="1">
         <tr>
-            <th>Commit ID</th>
-            <th>Commit Date</th>
-            <th>Commit Message</th>
-            <th>Committed By</th>
-            <th>Repo Name</th>
-            <th>Files Added</th>
-            <th>Files Deleted</th>
-            <th>Files Updated</th>
-            <th>Lines Added</th>
-            <th>Lines Deleted</th>
-            <th>Lines Updated</th>
+            <th>Date</th>
+            <th>CPU Usage (%)</th>
+            <th>Disk Space (GB)</th>
+            <th>Memory (MB)</th>
+            <th>IO Reads</th>
+            <th>IO Writes</th>
+            <th>Network In (MB)</th>
+            <th>Network Out (MB)</th>
+            <th>Cost ($)</th>
         </tr>
         {{ range .Metrics }}
         <tr>
-            <td>{{ .CommitID }}</td>
-            <td>{{ .CommitDate }}</td>
-            <td>{{ .CommitMessage }}</td>
-            <td>{{ .CommittedBy }}</td>
-            <td>{{ .RepoName }}</td>
-            <td>{{ .FilesAdded }}</td>
-            <td>{{ .FilesDeleted }}</td>
-            <td>{{ .FilesUpdated }}</td>
-            <td>{{ .LinesAdded }}</td>
-            <td>{{ .LinesDeleted }}</td>
-            <td>{{ .LinesUpdated }}</td>
+            <td>{{ .Date.Format "2006-01-02" }}</td>
+            <td>{{ .CPUUsage }}</td>
+            <td>{{ .DiskSpace }}</td>
+            <td>{{ .Memory }}</td>
+            <td>{{ .IOReads }}</td>
+            <td>{{ .IOWrites }}</td>
+            <td>{{ .NetworkIn }}</td>
+            <td>{{ .NetworkOut }}</td>
+            <td>{{ .Cost }}</td>
         </tr>
         {{ end }}
     </table>

@@ -16,12 +16,12 @@ import (
 func FetchAWSMetrics(serviceName string, startDate, endDate time.Time) ([]models.AWSMetric, error) {
 	filter := bson.M{
 		"service_name": serviceName,
-		"timestamp": bson.M{
+		"date": bson.M{
 			"$gte": startDate,
 			"$lte": endDate,
 		},
 	}
-	opts := options.Find().SetSort(bson.D{{"timestamp", 1}})
+	opts := options.Find().SetSort(bson.D{{Key: "date", Value: 1}})
 
 	cursor, err := database.AWSMetricsCollection.Find(context.Background(), filter, opts)
 	if err != nil {
@@ -54,7 +54,17 @@ func AWSMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmplPath, err := filepath.Abs("templates/git_dashboard.html")
+	services := []string{"ec2", "rds", "elb"}
+
+	data := models.AwsMetricsViewData{
+		Metrics:     metrics,
+		Services:    services,
+		ServiceName: serviceName,
+		StartDate:   startDateStr,
+		EndDate:     endDateStr,
+	}
+
+	tmplPath, err := filepath.Abs("internal/templates/aws_dashboard.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -65,5 +75,6 @@ func AWSMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w, metrics)
+
+	tmpl.Execute(w, data)
 }
