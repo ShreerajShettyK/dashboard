@@ -3,8 +3,8 @@ package handlers
 import (
 	"context"
 	"dashboard/cmd/api/routes/internal/database"
+	"dashboard/cmd/api/routes/internal/helpers"
 	"dashboard/cmd/api/routes/internal/models"
-	"html/template"
 	"net/http"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -56,15 +56,7 @@ func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		UserNameParameter: userName,
 	}
 
-	tmplPath := "internal/templates/git_dashboard.html"
-
-	tmpl, err := template.ParseFiles(tmplPath)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
+	if err := helpers.RenderTemplate(w, data, "git_dashboard.html"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

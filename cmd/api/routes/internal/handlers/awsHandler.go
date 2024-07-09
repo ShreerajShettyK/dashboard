@@ -3,10 +3,9 @@ package handlers
 import (
 	"context"
 	"dashboard/cmd/api/routes/internal/database"
+	"dashboard/cmd/api/routes/internal/helpers"
 	"dashboard/cmd/api/routes/internal/models"
-	"html/template"
 	"net/http"
-	"path/filepath"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -64,17 +63,8 @@ func AWSMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		EndDate:     endDateStr,
 	}
 
-	tmplPath, err := filepath.Abs("internal/templates/aws_dashboard.html")
-	if err != nil {
+	if err := helpers.RenderTemplate(w, data, "aws_dashboard.html"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	tmpl, err := template.ParseFiles(tmplPath)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	tmpl.Execute(w, data)
 }

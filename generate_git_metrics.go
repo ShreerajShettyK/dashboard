@@ -98,7 +98,7 @@ func main() {
 
 	// Generate dummy data for the month of July 2023
 	var metrics []interface{}
-	startDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC) //year month date
+	startDate := time.Date(2024, 7, 1, 0, 0, 0, 0, time.UTC) //year month date
 	for i := 0; i < 30; i++ {
 		date := startDate.AddDate(0, 0, i)
 		metrics = append(metrics, Metric{
