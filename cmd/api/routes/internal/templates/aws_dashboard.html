@@ -2,26 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AWS Metrics Dashboard</title>
+    <style>
+        form div {
+            display: inline-block;
+            margin-right: 30px;
+        }
+        table{
+            background-color: rgb(214, 222, 255);
+        }
+        .breadcrumbs {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+        .breadcrumbs li {
+            display: inline;
+            margin-right: 5px;
+        }
+        .breadcrumbs li a {
+            text-decoration: none;
+            color: blue;
+        }
+        .breadcrumbs li a:hover {
+            text-decoration: underline;
+        }
+        .breadcrumbs li::after {
+            content: ">>";
+            margin-left: 5px;
+        }
+        .breadcrumbs li:last-child::after {
+            content: "";
+        }
+    </style>
 </head>
 <body>
-    <h1>AWS Metrics</h1>
+    <h1>AWS Metrics Dashboard</h1>
+
+    {{ if .Services }}
+    <form method="get" action="/aws_metrics/home/resources">
+        <div>
+            <label for="repo_name">Select AWS Service(ec2,elb,rds):</label>
+            <select name="repo_name" id="repo_name">
+                <option value="None">None</option>
+                {{ range .Services }}
+                <option value="{{ . }}">{{ . }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div>
+            <label for="user_name">Select month and year to calculate the average consumption and cost:</label>
+            <select name="user_name" id="user_name">
+                <option value="None">None</option>
+                {{ range .Authors }}
+                <option value="{{ . }}">{{ . }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div>
+            <button type="submit" style="background-color: rgb(74, 74, 255);color: white;padding: 5px;border-radius: 5px;border-color: white;">Commit Records!!</button>
+        </div>
+    </form>
+    {{ end }}
+    
+    {{ if .Metrics }}
     <table border="1">
         <tr>
-            <th>Service Name</th>
-            <th>Metric Name</th>
-            <th>Value</th>
-            <th>Timestamp</th>
+            <th>Commit ID</th>
+            <th>Commit Date</th>
+            <th>Commit Message</th>
+            <th>Committed By</th>
+            <th>Repo Name</th>
+            <th>Files Added</th>
+            <th>Files Deleted</th>
+            <th>Files Updated</th>
+            <th>Lines Added</th>
+            <th>Lines Deleted</th>
+            <th>Lines Updated</th>
         </tr>
-        {{range .}}
+        {{ range .Metrics }}
         <tr>
-            <td>{{.ServiceName}}</td>
-            <td>{{.MetricName}}</td>
-            <td>{{.Value}}</td>
-            <td>{{.Timestamp}}</td>
+            <td>{{ .CommitID }}</td>
+            <td>{{ .CommitDate }}</td>
+            <td>{{ .CommitMessage }}</td>
+            <td>{{ .CommittedBy }}</td>
+            <td>{{ .RepoName }}</td>
+            <td>{{ .FilesAdded }}</td>
+            <td>{{ .FilesDeleted }}</td>
+            <td>{{ .FilesUpdated }}</td>
+            <td>{{ .LinesAdded }}</td>
+            <td>{{ .LinesDeleted }}</td>
+            <td>{{ .LinesUpdated }}</td>
         </tr>
-        {{end}}
+        {{ end }}
     </table>
+    {{ end }}
+
 </body>
 </html>

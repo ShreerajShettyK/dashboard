@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Git Metrics Dashboard</title>
+    <title>GIT Metrics Dashboard</title>
     <style>
         form div {
             display: inline-block;
@@ -79,15 +79,6 @@
     {{ end }}
     
     {{ if .Metrics }}
-    <!-- <h2>
-        All Commits made by 
-        {{ range $index, $element := .Metrics }}
-            {{ if eq $index 0 }}
-                <span style="color: red;">{{ $element.CommittedBy }}</span> on
-                <span style="color: red;">{{ $element.RepoName }}</span> repository:
-            {{ end }}
-        {{ end }}
-    </h2> -->
     <h2>
         {{ if and (eq .UserNameParameter "None") (eq .RepoNameParameter "None") }}
             All Commits:

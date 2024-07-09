@@ -49,7 +49,9 @@ func main() {
 
 	// Set up the router
 	r := mux.NewRouter()
-	r.HandleFunc("/aws_metrics", handlers.AWSMetricsHandler).Methods("GET")
+	r.HandleFunc("/aws_metrics/home", handlers.AwsHomeHandler).Methods("GET")
+	r.HandleFunc("/aws_metrics/home/resources", handlers.AWSMetricsHandler).Methods("GET")
+
 	r.HandleFunc("/git_metrics/home", handlers.GitHomeHandler).Methods("GET")
 	r.HandleFunc("/git_metrics/home/commits", handlers.GitMetricsHandler).Methods("GET")
 	r.HandleFunc("/git_metrics/home/repos", handlers.GitReposHandler).Methods("GET")
