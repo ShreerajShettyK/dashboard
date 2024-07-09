@@ -27,15 +27,7 @@ func FetchGitMetrics(userName, repoName string) ([]models.GitMetric, error) {
 	}
 	defer cursor.Close(context.Background())
 
-	var metrics []models.GitMetric
-	for cursor.Next(context.Background()) {
-		var metric models.GitMetric
-		if err := cursor.Decode(&metric); err != nil {
-			return nil, err
-		}
-		metrics = append(metrics, metric)
-	}
-	return metrics, nil
+	return helpers.DecodeCursor[models.GitMetric](context.Background(), cursor)
 }
 
 func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {

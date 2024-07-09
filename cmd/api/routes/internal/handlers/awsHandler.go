@@ -28,15 +28,7 @@ func FetchAWSMetrics(serviceName string, startDate, endDate time.Time) ([]models
 	}
 	defer cursor.Close(context.Background())
 
-	var metrics []models.AWSMetric
-	for cursor.Next(context.Background()) {
-		var metric models.AWSMetric
-		if err := cursor.Decode(&metric); err != nil {
-			return nil, err
-		}
-		metrics = append(metrics, metric)
-	}
-	return metrics, nil
+	return helpers.DecodeCursor[models.AWSMetric](context.Background(), cursor)
 }
 
 func AWSMetricsHandler(w http.ResponseWriter, r *http.Request) {
