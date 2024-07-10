@@ -19,7 +19,7 @@ func main() {
 	database.InitDB(cfg.MongoDBURI, cfg.DBName)
 	handlers.GitMetricsCollection = database.GitMetricsCollection
 
-	r := routes.RegisterRoutes()
+	r := routes.NewRouter()
 
 	log.Println("Starting server on :8000")
 	if err := http.ListenAndServe(":8000", r); err != nil {
