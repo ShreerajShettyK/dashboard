@@ -13,6 +13,7 @@ var (
 	templateExecute = func(t *template.Template, wr http.ResponseWriter, data interface{}) error {
 		return t.Execute(wr, data)
 	}
+	RenderTemplateFunc = RenderTemplate
 )
 
 func RenderTemplate(w http.ResponseWriter, data interface{}, templateName string) error {
