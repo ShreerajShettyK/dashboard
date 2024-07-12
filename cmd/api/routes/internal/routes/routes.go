@@ -41,6 +41,7 @@ func RegisterRoutes(r Router) {
 	r.HandleFunc("/git_metrics/home/commits", handlers.GitMetricsHandler).Methods("GET")
 	r.HandleFunc("/git_metrics/home/repos", handlers.GitReposHandler).Methods("GET")
 	r.HandleFunc("/git_metrics/home/authors", handlers.GitAuthorsHandler).Methods("GET")
+	r.HandleFunc("/git_metrics/repoAuthors", handlers.GitAuthorsByRepoHandler).Methods("GET")
 }
 
 func NewRouter() *mux.Router {
