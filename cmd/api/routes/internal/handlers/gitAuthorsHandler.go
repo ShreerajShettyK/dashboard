@@ -96,6 +96,8 @@
 // 	}
 // }
 
+//both working
+
 package handlers
 
 import (
@@ -106,12 +108,11 @@ import (
 	"net/http"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type GitMetricsCollectionInterface interface {
-	Distinct(ctx context.Context, fieldName string, filter interface{}, opts ...*options.DistinctOptions) ([]interface{}, error)
-}
+// type GitMetricsCollectionInterface interface {
+// 	Distinct(ctx context.Context, fieldName string, filter interface{}, opts ...*options.DistinctOptions) ([]interface{}, error)
+// }
 
 var GitMetricsCollection GitMetricsCollectionInterface
 

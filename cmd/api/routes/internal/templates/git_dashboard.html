@@ -103,7 +103,6 @@
             <th>Files Updated</th>
             <th>Lines Added</th>
             <th>Lines Deleted</th>
-            <th>Lines Updated</th>
         </tr>
         {{ range .Metrics }}
         <tr>
@@ -117,7 +116,6 @@
             <td>{{ .FilesUpdated }}</td>
             <td>{{ .LinesAdded }}</td>
             <td>{{ .LinesDeleted }}</td>
-            <td>{{ .LinesUpdated }}</td>
         </tr>
         {{ end }}
     </table>
