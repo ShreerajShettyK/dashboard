@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -100,5 +100,130 @@
     </table>
     {{ end }}
 
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AWS Metrics Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" rel="stylesheet" type="text/css"/>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <style>
+        form div {
+            display: inline-block;
+            margin-right: 30px;
+        }
+        table {
+            background-color: rgb(214, 222, 255);
+        }
+        .breadcrumbs {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+        .breadcrumbs li {
+            display: inline;
+            margin-right: 5px;
+        }
+        .breadcrumbs li a {
+            text-decoration: none;
+            color: blue;
+        }
+        .breadcrumbs li a:hover {
+            text-decoration: underline;
+        }
+        .breadcrumbs li::after {
+            content: ">>";
+            margin-left: 5px;
+        }
+        .breadcrumbs li:last-child::after {
+            content: "";
+        }
+    </style>
+</head>
+<body>
+    <h1>AWS Metrics Dashboard</h1>
+
+    {{ if .Services }}
+    <form method="get" action="/aws_metrics/home/resources">
+        <div>
+            <label for="service_name">Select AWS Service:</label>
+            <select name="service_name" id="service_name">
+                <option value="None">None</option>
+                {{ range .Services }}
+                <option value="{{ . }}">{{ . }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div>
+            <label for="date_range" class="form-label">Enter range:</label>
+            <input name="date_range" class="form-control form-control-solid" placeholder="Pick date range" id="kt_daterangepicker_1"/>
+        </div>
+        <div>
+            <button type="submit" style="background-color: rgb(74, 74, 255);color: white;padding: 5px;border-radius: 5px;border-color: white;">Search</button>
+        </div>
+    </form>
+    {{ end }}
+
+    {{ if .Metrics }}
+    <h2>
+        {{ if eq .ServiceName "None" }}
+            All AWS Metrics:
+        {{ else }}
+            Metrics for <span style="color: red;">{{ .ServiceName }}</span> from <span style="color: red;">{{ .StartDate }}</span> to <span style="color: red;">{{ .EndDate }}</span>:
+        {{ end }}
+    </h2>
+    <table border="1">
+        <tr>
+            <th>Date</th>
+            <th>CPU Usage (%)</th>
+            <th>Disk Space (GB)</th>
+            <th>Memory (MB)</th>
+            <th>IO Reads</th>
+            <th>IO Writes</th>
+            <th>Network In (MB)</th>
+            <th>Network Out (MB)</th>
+            <th>Cost ($)</th>
+        </tr>
+        {{ range .Metrics }}
+        <tr>
+            <td>{{ .Date.Format "2006-01-02" }}</td>
+            <td>{{ .CPUUsage }}</td>
+            <td>{{ .DiskSpace }}</td>
+            <td>{{ .Memory }}</td>
+            <td>{{ .IOReads }}</td>
+            <td>{{ .IOWrites }}</td>
+            <td>{{ .NetworkIn }}</td>
+            <td>{{ .NetworkOut }}</td>
+            <td>{{ .Cost }}</td>
+        </tr>
+        {{ end }}
+    </table>
+    {{ end }}
+
+    <script>
+        $(document).ready(function() {
+            $('#kt_daterangepicker_1').daterangepicker({
+                autoUpdateInput: false,
+                locale: {
+                    cancelLabel: 'Clear'
+                },
+                maxDate: moment(), // Prevent future dates
+            });
+
+            $('#kt_daterangepicker_1').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+            });
+
+            $('#kt_daterangepicker_1').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+            });
+        });
+    </script>
 </body>
 </html>
