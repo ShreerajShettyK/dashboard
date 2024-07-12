@@ -34,6 +34,22 @@
         .breadcrumbs li:last-child::after {
             content: "";
         }
+        .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        }
+        .pagination a {
+            margin: 0 5px;
+            padding: 5px 10px;
+            text-decoration: none;
+            color: white;
+            background-color: rgb(74, 74, 255);
+            border-radius: 5px;
+        }
+        .pagination a.active {
+            background-color: rgb(255, 174, 0);
+        }
     </style>
     <script>
         async function fetchAuthorsByRepo(repoName) {
@@ -153,6 +169,16 @@
         </tr>
         {{ end }}
     </table>
+    <div class="pagination">
+        {{ if gt .CurrentPage 1 }}
+        <a href="/git_metrics/home/commits?user_name={{ .UserNameParameter }}&repo_name={{ .RepoNameParameter }}&page={{ .PreviousPage }}">Prev</a>
+        {{ end }}
+        <a href="#" class="active">{{ .CurrentPage }}</a>
+        {{ if eq (len .Metrics) 10 }}
+        <a href="/git_metrics/home/commits?user_name={{ .UserNameParameter }}&repo_name={{ .RepoNameParameter }}&page={{ .NextPage }}">Next</a>
+        {{ end }}
+    </div>
+    
     {{ end }}
 
     {{ if .Repos }}

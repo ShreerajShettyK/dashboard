@@ -24,4 +24,7 @@ type GitMetricsViewData struct {
 	Authors           []string
 	RepoNameParameter string
 	UserNameParameter string
+	CurrentPage       int64
+	PreviousPage      int64
+	NextPage          int64
 }
