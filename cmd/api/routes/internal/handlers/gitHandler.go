@@ -1,76 +1,76 @@
-// package handlers
+package handlers
 
-// import (
-// 	"context"
-// 	"dashboard/cmd/api/routes/internal/database"
-// 	"dashboard/cmd/api/routes/internal/helpers"
-// 	"dashboard/cmd/api/routes/internal/models"
-// 	"net/http"
-// 	"strconv"
+import (
+	"context"
+	"dashboard/cmd/api/routes/internal/database"
+	"dashboard/cmd/api/routes/internal/helpers"
+	"dashboard/cmd/api/routes/internal/models"
+	"net/http"
+	"strconv"
 
-// 	"go.mongodb.org/mongo-driver/bson"
-// 	"go.mongodb.org/mongo-driver/mongo/options"
-// )
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
 
-// func FetchGitMetrics(userName, repoName string, limit, skip int64) ([]models.GitMetric, error) {
-// 	filter := bson.M{}
-// 	if userName != "None" {
-// 		filter["commited_by"] = userName
-// 	}
-// 	if repoName != "None" {
-// 		filter["reponame"] = repoName
-// 	}
-// 	opts := options.Find().SetSort(bson.D{{Key: "commit_date", Value: -1}}).SetLimit(limit).SetSkip(skip)
+func FetchGitMetrics(userName, repoName string, limit, skip int64) ([]models.GitMetric, error) {
+	filter := bson.M{}
+	if userName != "None" {
+		filter["commited_by"] = userName
+	}
+	if repoName != "None" {
+		filter["reponame"] = repoName
+	}
+	opts := options.Find().SetSort(bson.D{{Key: "commit_date", Value: -1}}).SetLimit(limit).SetSkip(skip)
 
-// 	cursor, err := database.GitMetricsCollection.Find(context.Background(), filter, opts)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer cursor.Close(context.Background())
+	cursor, err := database.GitMetricsCollection.Find(context.Background(), filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
 
-// 	return helpers.DecodeCursor[models.GitMetric](context.Background(), cursor)
-// }
+	return helpers.DecodeCursor[models.GitMetric](context.Background(), cursor)
+}
 
-// func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
-// 	userName := r.URL.Query().Get("user_name")
-// 	repoName := r.URL.Query().Get("repo_name")
-// 	pageStr := r.URL.Query().Get("page")
-// 	page, err := strconv.ParseInt(pageStr, 10, 64)
-// 	if err != nil || page < 1 {
-// 		page = 1
-// 	}
+func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	userName := r.URL.Query().Get("user_name")
+	repoName := r.URL.Query().Get("repo_name")
+	pageStr := r.URL.Query().Get("page")
+	page, err := strconv.ParseInt(pageStr, 10, 64)
+	if err != nil || page < 1 {
+		page = 1
+	}
 
-// 	limit := int64(10)
-// 	skip := (page - 1) * limit
+	limit := int64(10)
+	skip := (page - 1) * limit
 
-// 	metrics, err := FetchGitMetrics(userName, repoName, limit, skip)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	metrics, err := FetchGitMetrics(userName, repoName, limit, skip)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	// Format commit dates
-// 	for i := range metrics {
-// 		metrics[i].FormattedCommitDate = metrics[i].CommitDate.Format("Jan 2, 2006 at 3:04pm")
-// 	}
+	// Format commit dates
+	for i := range metrics {
+		metrics[i].FormattedCommitDate = metrics[i].CommitDate.Format("Jan 2, 2006 at 3:04pm")
+	}
 
-// 	// Add pagination details
-// 	data := models.GitMetricsViewData{
-// 		Metrics:           metrics,
-// 		Repos:             nil,
-// 		Authors:           nil,
-// 		RepoNameParameter: repoName,
-// 		UserNameParameter: userName,
-// 		CurrentPage:       page,
-// 		PreviousPage:      page - 1,
-// 		NextPage:          page + 1,
-// 	}
+	// Add pagination details
+	data := models.GitMetricsViewData{
+		Metrics:           metrics,
+		Repos:             nil,
+		Authors:           nil,
+		RepoNameParameter: repoName,
+		UserNameParameter: userName,
+		CurrentPage:       page,
+		PreviousPage:      page - 1,
+		NextPage:          page + 1,
+	}
 
-// 	if err := helpers.RenderTemplate(w, data, "git_dashboard.html"); err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// }
+	if err := helpers.RenderTemplate(w, data, "git_dashboard.html"); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
 
 // testing:
 // package handlers
@@ -173,93 +173,95 @@
 // 	}
 // }
 
-package handlers
+//below code testing 65% im getting but page doesnt load (functionality fails)
 
-import (
-	"context"
-	"dashboard/cmd/api/routes/internal/helpers"
-	"dashboard/cmd/api/routes/internal/models"
-	"net/http"
-	"strconv"
+// package handlers
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-)
+// import (
+// 	"context"
+// 	"dashboard/cmd/api/routes/internal/helpers"
+// 	"dashboard/cmd/api/routes/internal/models"
+// 	"net/http"
+// 	"strconv"
 
-// NewGitMetricsCollectionInterface defines the methods we need from the MongoDB collection
-type NewGitMetricsCollectionInterface interface {
-	Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (*mongo.Cursor, error)
-}
+// 	"go.mongodb.org/mongo-driver/bson"
+// 	"go.mongodb.org/mongo-driver/mongo"
+// 	"go.mongodb.org/mongo-driver/mongo/options"
+// )
 
-// CursorInterface defines the methods we need from the MongoDB cursor
-type CursorInterface interface {
-	Close(ctx context.Context) error
-	All(ctx context.Context, results interface{}) error
-}
+// // NewGitMetricsCollectionInterface defines the methods we need from the MongoDB collection
+// type NewGitMetricsCollectionInterface interface {
+// 	Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (*mongo.Cursor, error)
+// }
 
-var NewGitMetricsCollection NewGitMetricsCollectionInterface
+// // CursorInterface defines the methods we need from the MongoDB cursor
+// type CursorInterface interface {
+// 	Close(ctx context.Context) error
+// 	All(ctx context.Context, results interface{}) error
+// }
 
-func FetchGitMetrics(userName, repoName string, limit, skip int64) ([]models.GitMetric, error) {
-	filter := bson.M{}
-	if userName != "None" {
-		filter["commited_by"] = userName
-	}
-	if repoName != "None" {
-		filter["reponame"] = repoName
-	}
-	opts := options.Find().SetSort(bson.D{{Key: "commit_date", Value: -1}}).SetLimit(limit).SetSkip(skip)
+// var NewGitMetricsCollection NewGitMetricsCollectionInterface
 
-	cursor, err := NewGitMetricsCollection.Find(context.Background(), filter, opts)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(context.Background())
+// func FetchGitMetrics(userName, repoName string, limit, skip int64) ([]models.GitMetric, error) {
+// 	filter := bson.M{}
+// 	if userName != "None" {
+// 		filter["commited_by"] = userName
+// 	}
+// 	if repoName != "None" {
+// 		filter["reponame"] = repoName
+// 	}
+// 	opts := options.Find().SetSort(bson.D{{Key: "commit_date", Value: -1}}).SetLimit(limit).SetSkip(skip)
 
-	var metrics []models.GitMetric
-	if err := cursor.All(context.Background(), &metrics); err != nil {
-		return nil, err
-	}
-	return metrics, nil
-}
+// 	cursor, err := NewGitMetricsCollection.Find(context.Background(), filter, opts)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer cursor.Close(context.Background())
 
-func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
-	userName := r.URL.Query().Get("user_name")
-	repoName := r.URL.Query().Get("repo_name")
-	pageStr := r.URL.Query().Get("page")
-	page, err := strconv.ParseInt(pageStr, 10, 64)
-	if err != nil || page < 1 {
-		page = 1
-	}
+// 	var metrics []models.GitMetric
+// 	if err := cursor.All(context.Background(), &metrics); err != nil {
+// 		return nil, err
+// 	}
+// 	return metrics, nil
+// }
 
-	limit := int64(10)
-	skip := (page - 1) * limit
+// func GitMetricsHandler(w http.ResponseWriter, r *http.Request) {
+// 	userName := r.URL.Query().Get("user_name")
+// 	repoName := r.URL.Query().Get("repo_name")
+// 	pageStr := r.URL.Query().Get("page")
+// 	page, err := strconv.ParseInt(pageStr, 10, 64)
+// 	if err != nil || page < 1 {
+// 		page = 1
+// 	}
 
-	metrics, err := FetchGitMetrics(userName, repoName, limit, skip)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+// 	limit := int64(10)
+// 	skip := (page - 1) * limit
 
-	// Format commit dates
-	for i := range metrics {
-		metrics[i].FormattedCommitDate = metrics[i].CommitDate.Format("Jan 2, 2006 at 3:04pm")
-	}
+// 	metrics, err := FetchGitMetrics(userName, repoName, limit, skip)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Add pagination details
-	data := models.GitMetricsViewData{
-		Metrics:           metrics,
-		Repos:             nil,
-		Authors:           nil,
-		RepoNameParameter: repoName,
-		UserNameParameter: userName,
-		CurrentPage:       page,
-		PreviousPage:      page - 1,
-		NextPage:          page + 1,
-	}
+// 	// Format commit dates
+// 	for i := range metrics {
+// 		metrics[i].FormattedCommitDate = metrics[i].CommitDate.Format("Jan 2, 2006 at 3:04pm")
+// 	}
 
-	if err := helpers.RenderTemplateFunc(w, data, "git_dashboard.html"); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
+// 	// Add pagination details
+// 	data := models.GitMetricsViewData{
+// 		Metrics:           metrics,
+// 		Repos:             nil,
+// 		Authors:           nil,
+// 		RepoNameParameter: repoName,
+// 		UserNameParameter: userName,
+// 		CurrentPage:       page,
+// 		PreviousPage:      page - 1,
+// 		NextPage:          page + 1,
+// 	}
+
+// 	if err := helpers.RenderTemplateFunc(w, data, "git_dashboard.html"); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// }
