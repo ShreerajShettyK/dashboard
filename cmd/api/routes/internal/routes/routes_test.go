@@ -40,6 +40,7 @@ func TestNewRouter(t *testing.T) {
 		{"/git_metrics/home/commits", "GET"},
 		{"/git_metrics/home/repos", "GET"},
 		{"/git_metrics/home/authors", "GET"},
+		{"/git_metrics/repoAuthors", "GET"},
 	}
 
 	for _, route := range routes {
