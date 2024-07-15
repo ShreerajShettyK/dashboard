@@ -17,6 +17,7 @@ func main() {
 	}
 
 	database.InitDB(cfg.MongoDBURI, cfg.DBName)
+
 	handlers.GitMetricsCollection = database.GitMetricsCollection
 
 	r := routes.NewRouter()

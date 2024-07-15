@@ -1,57 +1,47 @@
 package handlers_test
 
-// import (
-// 	"dashboard/cmd/api/routes/internal/database"
-// 	"dashboard/cmd/api/routes/internal/helpers"
-// 	"dashboard/cmd/api/routes/internal/models"
-// 	"errors"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
+import (
+	"dashboard/cmd/api/routes/internal/helpers"
+	"dashboard/cmd/api/routes/internal/models"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	"dashboard/cmd/api/routes/internal/handlers"
+	"dashboard/cmd/api/routes/internal/handlers"
 
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/mock"
-// )
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
 
-// // type MockGitMetricsCollection struct {
-// // 	mock.Mock
-// // }
+func TestFetchDistinctRepositories_Success(t *testing.T) {
+	mockCollection := new(MockGitMetricsCollection)
+	handlers.GitMetricsCollection = mockCollection
 
-// // func (m *MockGitMetricsCollection) Distinct(ctx context.Context, fieldName string, filter interface{}, opts ...*options.DistinctOptions) ([]interface{}, error) {
-// // 	args := m.Called(ctx, fieldName, filter, opts)
-// // 	return args.Get(0).([]interface{}), args.Error(1)
-// // }
+	expectedRepos := []interface{}{"repo1", "repo2", "repo3"}
+	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return(expectedRepos, nil)
 
-// func TestFetchDistinctRepositories_Success(t *testing.T) {
-// 	mockCollection := new(MockGitMetricsCollection)
-// 	database.GitMetricsCollection = mockCollection
+	repos, err := handlers.FetchDistinctRepositories()
 
-// 	expectedRepos := []interface{}{"repo1", "repo2", "repo3"}
-// 	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return(expectedRepos, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"repo1", "repo2", "repo3"}, repos)
+	mockCollection.AssertExpectations(t)
+}
 
-// 	repos, err := handlers.FetchDistinctRepositories()
+func TestFetchDistinctRepositories_Error(t *testing.T) {
+	mockCollection := new(MockGitMetricsCollection)
+	handlers.GitMetricsCollection = mockCollection
 
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, []string{"repo1", "repo2", "repo3"}, repos)
-// 	mockCollection.AssertExpectations(t)
-// }
+	expectedError := errors.New("database error")
+	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return([]interface{}{}, expectedError)
 
-// func TestFetchDistinctRepositories_Error(t *testing.T) {
-// 	mockCollection := new(MockGitMetricsCollection)
-// 	database.GitMetricsCollection = mockCollection
+	repos, err := handlers.FetchDistinctRepositories()
 
-// 	expectedError := errors.New("database error")
-// 	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return([]interface{}{}, expectedError)
-
-// 	repos, err := handlers.FetchDistinctRepositories()
-
-// 	assert.Error(t, err)
-// 	assert.Nil(t, repos)
-// 	assert.Equal(t, expectedError, err)
-// 	mockCollection.AssertExpectations(t)
-// }
+	assert.Error(t, err)
+	assert.Nil(t, repos)
+	assert.Equal(t, expectedError, err)
+	mockCollection.AssertExpectations(t)
+}
 
 // func TestFetchDistinctRepositories_UninitializedCollection(t *testing.T) {
 // 	database.GitMetricsCollection = nil
@@ -63,96 +53,106 @@ package handlers_test
 // 	assert.Equal(t, "GitMetricsCollection is not initialized", err.Error())
 // }
 
-// func TestFetchDistinctRepositories_TypeAssertionFailure(t *testing.T) {
-// 	mockCollection := new(MockGitMetricsCollection)
-// 	database.GitMetricsCollection = mockCollection
+func TestFetchDistinctRepositories_UninitializedCollection(t *testing.T) {
+	handlers.GitMetricsCollection = nil
 
-// 	invalidRepos := []interface{}{"repo1", 123, "repo3"}
-// 	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return(invalidRepos, nil)
+	authors, err := handlers.FetchDistinctRepositories()
 
-// 	repos, err := handlers.FetchDistinctRepositories()
+	assert.Error(t, err)
+	assert.Nil(t, authors)
+	assert.Equal(t, "GitMetricsCollection is not initialized", err.Error())
+}
 
-// 	assert.Error(t, err)
-// 	assert.Nil(t, repos)
-// 	assert.Equal(t, "type assertion failed for repository", err.Error())
-// 	mockCollection.AssertExpectations(t)
-// }
+func TestFetchDistinctRepositories_TypeAssertionFailure(t *testing.T) {
+	mockCollection := new(MockGitMetricsCollection)
+	handlers.GitMetricsCollection = mockCollection
 
-// func TestGitReposHandler_FetchError(t *testing.T) {
-// 	mockCollection := new(MockGitMetricsCollection)
-// 	database.GitMetricsCollection = mockCollection
+	invalidRepos := []interface{}{"repo1", 123, "repo3"}
+	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return(invalidRepos, nil)
 
-// 	expectedError := errors.New("database error")
-// 	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return([]interface{}{}, expectedError)
+	repos, err := handlers.FetchDistinctRepositories()
 
-// 	req, err := http.NewRequest("GET", "/git-repos", nil)
-// 	assert.NoError(t, err)
+	assert.Error(t, err)
+	assert.Nil(t, repos)
+	assert.Equal(t, "type assertion failed for repository", err.Error())
+	mockCollection.AssertExpectations(t)
+}
 
-// 	rr := httptest.NewRecorder()
-// 	handler := http.HandlerFunc(handlers.GitReposHandler)
+func TestGitReposHandler_FetchError(t *testing.T) {
+	mockCollection := new(MockGitMetricsCollection)
+	handlers.GitMetricsCollection = mockCollection
 
-// 	handler.ServeHTTP(rr, req)
+	expectedError := errors.New("database error")
+	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return([]interface{}{}, expectedError)
 
-// 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
-// 	mockCollection.AssertExpectations(t)
-// }
+	req, err := http.NewRequest("GET", "/git-repos", nil)
+	assert.NoError(t, err)
 
-// func TestGitReposHandler_Success(t *testing.T) {
-// 	// Save the original function and defer its restoration
-// 	originalRenderTemplateFunc := helpers.RenderTemplateFunc
-// 	defer func() { helpers.RenderTemplateFunc = originalRenderTemplateFunc }()
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(handlers.GitReposHandler)
 
-// 	mockCollection := new(MockGitMetricsCollection)
-// 	database.GitMetricsCollection = mockCollection
+	handler.ServeHTTP(rr, req)
 
-// 	expectedRepos := []interface{}{"repo1", "repo2", "repo3"}
-// 	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return(expectedRepos, nil)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	mockCollection.AssertExpectations(t)
+}
 
-// 	// Mock the RenderTemplateFunc
-// 	helpers.RenderTemplateFunc = func(w http.ResponseWriter, data interface{}, templateName string) error {
-// 		assert.Equal(t, "git_dashboard.html", templateName)
-// 		assert.IsType(t, models.GitMetricsViewData{}, data)
-// 		viewData := data.(models.GitMetricsViewData)
-// 		assert.Equal(t, []string{"repo1", "repo2", "repo3"}, viewData.Repos)
-// 		return nil
-// 	}
+func TestGitReposHandler_Success(t *testing.T) {
+	// Save the original function and defer its restoration
+	originalRenderTemplateFunc := helpers.RenderTemplateFunc
+	defer func() { helpers.RenderTemplateFunc = originalRenderTemplateFunc }()
 
-// 	req, err := http.NewRequest("GET", "/git-repos", nil)
-// 	assert.NoError(t, err)
+	mockCollection := new(MockGitMetricsCollection)
+	handlers.GitMetricsCollection = mockCollection
 
-// 	rr := httptest.NewRecorder()
-// 	handler := http.HandlerFunc(handlers.GitReposHandler)
+	expectedRepos := []interface{}{"repo1", "repo2", "repo3"}
+	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return(expectedRepos, nil)
 
-// 	handler.ServeHTTP(rr, req)
+	// Mock the RenderTemplateFunc
+	helpers.RenderTemplateFunc = func(w http.ResponseWriter, data interface{}, templateName string) error {
+		assert.Equal(t, "git_dashboard.html", templateName)
+		assert.IsType(t, models.GitMetricsViewData{}, data)
+		viewData := data.(models.GitMetricsViewData)
+		assert.Equal(t, []string{"repo1", "repo2", "repo3"}, viewData.Repos)
+		return nil
+	}
 
-// 	assert.Equal(t, http.StatusOK, rr.Code)
-// 	mockCollection.AssertExpectations(t)
-// }
+	req, err := http.NewRequest("GET", "/git-repos", nil)
+	assert.NoError(t, err)
 
-// func TestGitReposHandler_RenderError(t *testing.T) {
-// 	// Save the original function and defer its restoration
-// 	originalRenderTemplateFunc := helpers.RenderTemplateFunc
-// 	defer func() { helpers.RenderTemplateFunc = originalRenderTemplateFunc }()
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(handlers.GitReposHandler)
 
-// 	mockCollection := new(MockGitMetricsCollection)
-// 	database.GitMetricsCollection = mockCollection
+	handler.ServeHTTP(rr, req)
 
-// 	expectedRepos := []interface{}{"repo1", "repo2", "repo3"}
-// 	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return(expectedRepos, nil)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockCollection.AssertExpectations(t)
+}
 
-// 	// Mock the RenderTemplateFunc to return an error
-// 	helpers.RenderTemplateFunc = func(w http.ResponseWriter, data interface{}, templateName string) error {
-// 		return errors.New("render error")
-// 	}
+func TestGitReposHandler_RenderError(t *testing.T) {
+	// Save the original function and defer its restoration
+	originalRenderTemplateFunc := helpers.RenderTemplateFunc
+	defer func() { helpers.RenderTemplateFunc = originalRenderTemplateFunc }()
 
-// 	req, err := http.NewRequest("GET", "/git-repos", nil)
-// 	assert.NoError(t, err)
+	mockCollection := new(MockGitMetricsCollection)
+	handlers.GitMetricsCollection = mockCollection
 
-// 	rr := httptest.NewRecorder()
-// 	handler := http.HandlerFunc(handlers.GitReposHandler)
+	expectedRepos := []interface{}{"repo1", "repo2", "repo3"}
+	mockCollection.On("Distinct", mock.Anything, "reponame", mock.Anything, mock.Anything).Return(expectedRepos, nil)
 
-// 	handler.ServeHTTP(rr, req)
+	// Mock the RenderTemplateFunc to return an error
+	helpers.RenderTemplateFunc = func(w http.ResponseWriter, data interface{}, templateName string) error {
+		return errors.New("render error")
+	}
 
-// 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
-// 	mockCollection.AssertExpectations(t)
-// }
+	req, err := http.NewRequest("GET", "/git-repos", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(handlers.GitReposHandler)
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	mockCollection.AssertExpectations(t)
+}
