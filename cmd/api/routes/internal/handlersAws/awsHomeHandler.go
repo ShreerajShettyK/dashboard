@@ -1,4 +1,4 @@
-package handlers
+package handlersAws
 
 import (
 	"dashboard/cmd/api/routes/internal/helpers"
