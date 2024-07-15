@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <title>GIT Metrics Dashboard</title>
     <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
         form div {
             display: inline-block;
             margin-right: 30px;
@@ -87,9 +102,12 @@
     </script>
 </head>
 <body>
+    <div class="container">
     <h1>Git Metrics Dashboard</h1>
+    <div style="margin-bottom: 70px;">
+    <a href="/aws_metrics/home" style="float: right;">Aws Dashboard</a>
 
-    <ul class="breadcrumbs">
+    <ul class="breadcrumbs" style="float: left;">
         <li><a href="/git_metrics/home">Home</a></li>
         {{ if .Metrics }}
         <li><a href="/git_metrics/home/commits">Commits</a></li>
@@ -101,6 +119,7 @@
         <li><a href="/git_metrics/home/authors">Authors</a></li>
         {{ end }}
     </ul>
+    </div>
 
     {{ if and .Repos .Authors }}
     <form method="get" action="/git_metrics/home/commits">
@@ -157,7 +176,8 @@
         {{ range .Metrics }}
         <tr>
             <td>{{ .CommitID }}</td>
-            <td>{{ .CommitDate }}</td>
+            <!-- <td>{{ .CommitDate }}</td> -->
+            <td>{{ .FormattedCommitDate }}</td>
             <td>{{ .CommitMessage }}</td>
             <td>{{ .CommittedBy }}</td>
             <td>{{ .RepoName }}</td>
@@ -208,5 +228,6 @@
         {{ end }}
     </table>
     {{ end }}
+    </div>
 </body>
 </html>
