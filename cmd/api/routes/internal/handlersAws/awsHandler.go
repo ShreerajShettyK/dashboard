@@ -126,7 +126,7 @@ func AWSMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		EndDate:     endDate.Format("2006-01-02"),
 	}
 
-	if err := helpers.RenderTemplate(w, data, "aws_dashboard.html"); err != nil {
+	if err := helpers.RenderTemplateFunc(w, data, "aws_dashboard.html"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

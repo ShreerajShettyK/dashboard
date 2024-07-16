@@ -14,7 +14,7 @@ func AwsHomeHandler(w http.ResponseWriter, r *http.Request) {
 		Services: services,
 	}
 
-	if err := helpers.RenderTemplate(w, data, "aws_dashboard.html"); err != nil {
+	if err := helpers.RenderTemplateFunc(w, data, "aws_dashboard.html"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
