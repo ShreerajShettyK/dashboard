@@ -7,6 +7,7 @@ import (
 	"dashboard/cmd/api/routes/config"
 	"dashboard/cmd/api/routes/internal/database"
 	"dashboard/cmd/api/routes/internal/handlers"
+	"dashboard/cmd/api/routes/internal/handlersAws"
 	"dashboard/cmd/api/routes/internal/routes"
 )
 
@@ -19,6 +20,7 @@ func main() {
 	database.InitDB(cfg.MongoDBURI, cfg.DBName)
 
 	handlers.GitMetricsCollection = database.GitMetricsCollection
+	handlersAws.AWSMetricsCollection = database.AWSMetricsCollection
 
 	r := routes.NewRouter()
 

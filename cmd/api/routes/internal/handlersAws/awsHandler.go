@@ -76,6 +76,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var AWSMetricsCollection AWSMetricsCollectionInterface
+
 func FetchAWSMetrics(serviceName string, startDate, endDate time.Time) ([]models.AWSMetric, error) {
 	filter := bson.M{
 		"service_name": serviceName,
@@ -99,11 +101,13 @@ func AWSMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	serviceName := r.URL.Query().Get("service_name")
 	dateRangeStr := r.URL.Query().Get("date_range")
 
+	dateFormat := "2006-01-02"
+
 	var startDate, endDate time.Time
 	if dateRangeStr != "" {
 		dates := strings.Split(dateRangeStr, " - ")
-		startDate, _ = time.Parse("2006-01-02", dates[0])
-		endDate, _ = time.Parse("2006-01-02", dates[1])
+		startDate, _ = time.Parse(dateFormat, dates[0])
+		endDate, _ = time.Parse(dateFormat, dates[1])
 	} else {
 		// Default to a date range of the past month if not specified
 		endDate = time.Now()
@@ -122,8 +126,8 @@ func AWSMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		Metrics:     metrics,
 		Services:    services,
 		ServiceName: serviceName,
-		StartDate:   startDate.Format("2006-01-02"),
-		EndDate:     endDate.Format("2006-01-02"),
+		StartDate:   startDate.Format(dateFormat),
+		EndDate:     endDate.Format(dateFormat),
 	}
 
 	if err := helpers.RenderTemplateFunc(w, data, "aws_dashboard.html"); err != nil {
