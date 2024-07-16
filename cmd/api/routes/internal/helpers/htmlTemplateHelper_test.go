@@ -138,3 +138,28 @@ func TestRenderTemplateIntegration(t *testing.T) {
 	// You might want to create a test template file or skip this test in CI environments
 	assert.Error(t, err) // Expecting an error because the template file doesn't exist
 }
+
+func TestTemplateExecute(t *testing.T) {
+	// Create a simple template
+	tmpl, err := template.New("test").Parse("Hello {{.Name}}")
+	assert.NoError(t, err)
+
+	// Create a mock response writer
+	w := httptest.NewRecorder()
+
+	// Create some test data
+	data := struct {
+		Name string
+	}{
+		Name: "World",
+	}
+
+	// Call the templateExecute function
+	err = templateExecute(tmpl, w, data)
+
+	// Assert that there's no error
+	assert.NoError(t, err)
+
+	// Assert that the output is correct
+	assert.Equal(t, "Hello World", w.Body.String())
+}

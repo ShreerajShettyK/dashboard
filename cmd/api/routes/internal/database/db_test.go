@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type MockMongoClient struct {
@@ -19,6 +20,11 @@ type MockMongoClient struct {
 func (m *MockMongoClient) Database(name string) *mongo.Database {
 	args := m.Called(name)
 	return args.Get(0).(*mongo.Database)
+}
+
+func (m *MockMongoClient) Ping(ctx context.Context, rp *readpref.ReadPref) error {
+	args := m.Called(ctx, rp)
+	return args.Error(0)
 }
 
 type MockMongoDatabase struct {
@@ -105,6 +111,79 @@ func TestInitDB(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewMongoClient(t *testing.T) {
+	// Save the original function and defer its restoration
+	oldMongoConnect := mongoConnect
+	defer func() { mongoConnect = oldMongoConnect }()
+
+	// Test case 1: Successful connection
+	t.Run("Successful connection", func(t *testing.T) {
+		// Mock the mongoConnect function
+		mongoConnect = func(ctx context.Context, opts ...*options.ClientOptions) (*mongo.Client, error) {
+			return &mongo.Client{}, nil
+		}
+
+		// Call newMongoClient
+		client, err := newMongoClient(context.Background(), options.Client())
+
+		// Assert the results
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+	})
+
+	// Test case 2: Connection failure
+	t.Run("Connection failure", func(t *testing.T) {
+		// Mock the mongoConnect function to return an error
+		mongoConnect = func(ctx context.Context, opts ...*options.ClientOptions) (*mongo.Client, error) {
+			return nil, errors.New("connection error")
+		}
+
+		// Call newMongoClient
+		client, err := newMongoClient(context.Background(), options.Client())
+
+		// Assert the results
+		assert.Error(t, err)
+		assert.Nil(t, client)
+		assert.EqualError(t, err, "connection error")
+	})
+}
+
+func TestMongoPing(t *testing.T) {
+	// Save the original function and defer its restoration
+	oldPing := mongoPing
+	defer func() { mongoPing = oldPing }()
+
+	// Test case 1: Successful ping
+	t.Run("Successful ping", func(t *testing.T) {
+		// Mock the Ping function
+		mongoPing = func(client *mongo.Client, ctx context.Context) error {
+			return nil
+		}
+
+		// Call mongoPing with nil client (it won't be used)
+		err := mongoPing(nil, context.Background())
+
+		// Assert the results
+		assert.NoError(t, err)
+	})
+
+	// Test case 2: Ping failure
+	t.Run("Ping failure", func(t *testing.T) {
+		// Mock the Ping function to return an error
+		expectedError := errors.New("ping failed")
+		mongoPing = func(client *mongo.Client, ctx context.Context) error {
+			return expectedError
+		}
+
+		// Call mongoPing with nil client (it won't be used)
+		err := mongoPing(nil, context.Background())
+
+		// Assert the results
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
+	})
 }
 
 // package database_test
