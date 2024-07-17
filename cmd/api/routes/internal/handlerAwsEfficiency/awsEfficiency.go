@@ -12,6 +12,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	cloudtrailTypes "github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -39,6 +41,35 @@ func ListEC2Instances() ([]string, error) {
 	return instanceIds, nil
 }
 
+func getLastActivity(ctx context.Context, cloudTrailSvc *cloudtrail.Client, instanceId string) (time.Time, error) {
+	endTime := time.Now()
+	startTime := endTime.AddDate(0, -1, 0) // Look back 1 month
+
+	input := &cloudtrail.LookupEventsInput{
+		LookupAttributes: []cloudtrailTypes.LookupAttribute{
+			{
+				AttributeKey:   cloudtrailTypes.LookupAttributeKeyResourceName,
+				AttributeValue: aws.String(instanceId),
+			},
+		},
+		StartTime: aws.Time(startTime),
+		EndTime:   aws.Time(endTime),
+	}
+
+	resp, err := cloudTrailSvc.LookupEvents(ctx, input)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if len(resp.Events) > 0 {
+		// Events are returned in descending chronological order
+		return *resp.Events[0].EventTime, nil
+	}
+
+	// If no events found, return the launch time
+	return time.Time{}, nil
+}
+
 func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 	log.Printf("Fetching details for instance ID: %s\n", instanceId)
 	cfg, err := config.LoadDefaultConfig(context.TODO())
@@ -48,6 +79,7 @@ func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 	}
 	ec2Svc := ec2.NewFromConfig(cfg)
 	ceSvc := costexplorer.NewFromConfig(cfg)
+	cloudTrailSvc := cloudtrail.NewFromConfig(cfg)
 
 	instanceInput := &ec2.DescribeInstancesInput{
 		InstanceIds: []string{instanceId},
@@ -63,7 +95,14 @@ func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 	var region string
 	if len(instanceResult.Reservations) > 0 && len(instanceResult.Reservations[0].Instances) > 0 {
 		instance := instanceResult.Reservations[0].Instances[0]
-		lastActivity = *instance.LaunchTime
+		// In FetchInstanceDetails function:
+		lastActivity, err = getLastActivity(context.TODO(), cloudTrailSvc, instanceId)
+		if err != nil {
+			log.Printf("Error getting last activity: %v\n", err)
+			// Fall back to launch time if there's an error
+			// lastActivity = *instance.LaunchTime
+		}
+		// lastActivity = *instance.LaunchTime
 		instanceType = string(instance.InstanceType)
 		if instance.Placement != nil && instance.Placement.AvailabilityZone != nil {
 			// Extract region from availability zone
@@ -71,7 +110,7 @@ func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 			region = az[:len(az)-1] // Remove the last character to get the region
 		}
 	}
-	log.Println("Last activity:", lastActivity)
+
 	log.Println("Instance type:", instanceType)
 	log.Println("Region:", region)
 
@@ -123,6 +162,7 @@ func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 		return nil, err
 	}
 	lastActivity = lastActivity.In(location)
+	log.Println("Last activity:", lastActivity.Format("Jan 2, 2006 at 3:04pm"))
 
 	log.Println("Sending cost explorer request")
 	costResult, err := ceSvc.GetCostAndUsage(context.TODO(), costInput)
