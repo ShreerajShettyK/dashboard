@@ -1,4 +1,4 @@
-// 86.7
+// 93.8% of statements
 package database
 
 import (

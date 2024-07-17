@@ -75,18 +75,6 @@
                 }
             });
         });
-
-
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("Document loaded");
-            fetchInstances();
-            document.getElementById('instance_id').addEventListener('change', (event) => {
-                const instanceId = event.target.value;
-                if (instanceId) {
-                    fetchInstanceDetails(instanceId);
-                }
-            });
-        });
     </script>
 </head>
 <body>

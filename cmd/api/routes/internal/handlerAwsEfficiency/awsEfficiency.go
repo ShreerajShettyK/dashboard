@@ -21,13 +21,13 @@ import (
 )
 
 func ListEC2Instances() ([]string, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	svc := ec2.NewFromConfig(cfg)
 	input := &ec2.DescribeInstancesInput{}
-	result, err := svc.DescribeInstances(context.TODO(), input)
+	result, err := svc.DescribeInstances(context.Background(), input)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func ListEC2Instances() ([]string, error) {
 	var instanceIds []string
 	for _, reservation := range result.Reservations {
 		for _, instance := range reservation.Instances {
-			instanceIds = append(instanceIds, *instance.InstanceId)
+			instanceIds = append(instanceIds, aws.ToString(instance.InstanceId))
 		}
 	}
 	return instanceIds, nil
@@ -72,7 +72,7 @@ func getLastActivity(ctx context.Context, cloudTrailSvc *cloudtrail.Client, inst
 
 func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 	log.Printf("Fetching details for instance ID: %s\n", instanceId)
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
 		log.Printf("Error loading AWS config: %v\n", err)
 		return nil, err
@@ -84,7 +84,7 @@ func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 	instanceInput := &ec2.DescribeInstancesInput{
 		InstanceIds: []string{instanceId},
 	}
-	instanceResult, err := ec2Svc.DescribeInstances(context.TODO(), instanceInput)
+	instanceResult, err := ec2Svc.DescribeInstances(context.Background(), instanceInput)
 	if err != nil {
 		log.Printf("Error describing instances: %v\n", err)
 		return nil, err
@@ -95,8 +95,8 @@ func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 	var region string
 	if len(instanceResult.Reservations) > 0 && len(instanceResult.Reservations[0].Instances) > 0 {
 		instance := instanceResult.Reservations[0].Instances[0]
-		// In FetchInstanceDetails function:
-		lastActivity, err = getLastActivity(context.TODO(), cloudTrailSvc, instanceId)
+
+		lastActivity, err = getLastActivity(context.Background(), cloudTrailSvc, instanceId)
 		if err != nil {
 			log.Printf("Error getting last activity: %v\n", err)
 			// Fall back to launch time if there's an error
@@ -106,7 +106,7 @@ func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 		instanceType = string(instance.InstanceType)
 		if instance.Placement != nil && instance.Placement.AvailabilityZone != nil {
 			// Extract region from availability zone
-			az := *instance.Placement.AvailabilityZone
+			az := aws.ToString(instance.Placement.AvailabilityZone)
 			region = az[:len(az)-1] // Remove the last character to get the region
 		}
 	}
@@ -165,7 +165,7 @@ func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 	log.Println("Last activity:", lastActivity.Format("Jan 2, 2006 at 3:04pm"))
 
 	log.Println("Sending cost explorer request")
-	costResult, err := ceSvc.GetCostAndUsage(context.TODO(), costInput)
+	costResult, err := ceSvc.GetCostAndUsage(context.Background(), costInput)
 	if err != nil {
 		log.Printf("Error getting cost and usage: %v\n", err)
 		// Return partial information without cost
@@ -184,7 +184,7 @@ func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 	if len(costResult.ResultsByTime) > 0 {
 		for _, resultByTime := range costResult.ResultsByTime {
 			for _, group := range resultByTime.Groups {
-				cost, _ := strconv.ParseFloat(*group.Metrics["BlendedCost"].Amount, 64)
+				cost, _ := strconv.ParseFloat(aws.ToString(group.Metrics["BlendedCost"].Amount), 64)
 				totalCost += cost
 			}
 		}
