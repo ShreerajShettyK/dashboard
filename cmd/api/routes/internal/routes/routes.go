@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"dashboard/cmd/api/routes/internal/handlerAwsEfficiency"
 	"dashboard/cmd/api/routes/internal/handlers"
 	"dashboard/cmd/api/routes/internal/handlersAws"
 	"net/http"
@@ -22,6 +23,10 @@ func RegisterRoutes(r Router) {
 	r.HandleFunc("/git_metrics/home/repos", handlers.GitReposHandler).Methods("GET")
 	r.HandleFunc("/git_metrics/home/authors", handlers.GitAuthorsHandler).Methods("GET")
 	r.HandleFunc("/git_metrics/repoAuthors", handlers.GitAuthorsByRepoHandler).Methods("GET")
+
+	r.HandleFunc("/aws_billing/instances", handlerAwsEfficiency.ListInstancesHandler).Methods("GET")
+	r.HandleFunc("/aws_billing/instance/{instance_id}", handlerAwsEfficiency.InstanceDetailsHandler).Methods("GET")
+
 }
 
 func NewRouter() *mux.Router {
