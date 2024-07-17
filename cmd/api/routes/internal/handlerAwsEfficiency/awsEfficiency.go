@@ -18,13 +18,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type EC2Instance struct {
-	InstanceId       string  `json:"InstanceId"`
-	LastActivity     string  `json:"LastActivity"`
-	LastActivityDays int     `json:"LastActivityDays"`
-	Cost             float64 `json:"Cost"`
-}
-
 func ListEC2Instances() ([]string, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
@@ -46,7 +39,7 @@ func ListEC2Instances() ([]string, error) {
 	return instanceIds, nil
 }
 
-func FetchInstanceDetails(instanceId string) (*EC2Instance, error) {
+func FetchInstanceDetails(instanceId string) (*models.EC2Instance, error) {
 	log.Printf("Fetching details for instance ID: %s\n", instanceId)
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
@@ -66,10 +59,21 @@ func FetchInstanceDetails(instanceId string) (*EC2Instance, error) {
 	}
 
 	var lastActivity time.Time
+	var instanceType string
+	var region string
 	if len(instanceResult.Reservations) > 0 && len(instanceResult.Reservations[0].Instances) > 0 {
-		lastActivity = *instanceResult.Reservations[0].Instances[0].LaunchTime
+		instance := instanceResult.Reservations[0].Instances[0]
+		lastActivity = *instance.LaunchTime
+		instanceType = string(instance.InstanceType)
+		if instance.Placement != nil && instance.Placement.AvailabilityZone != nil {
+			// Extract region from availability zone
+			az := *instance.Placement.AvailabilityZone
+			region = az[:len(az)-1] // Remove the last character to get the region
+		}
 	}
 	log.Println("Last activity:", lastActivity)
+	log.Println("Instance type:", instanceType)
+	log.Println("Region:", region)
 
 	daysSinceActivity := int(time.Since(lastActivity).Hours() / 24)
 	log.Println("Days since activity:", daysSinceActivity)
@@ -86,26 +90,54 @@ func FetchInstanceDetails(instanceId string) (*EC2Instance, error) {
 		Granularity: types.GranularityDaily,
 		Metrics:     []string{"BlendedCost"},
 		Filter: &types.Expression{
-			Dimensions: &types.DimensionValues{
-				Key:    types.Dimension("INSTANCE_ID"),
-				Values: []string{instanceId},
+			And: []types.Expression{
+				{
+					Dimensions: &types.DimensionValues{
+						Key:    types.DimensionService,
+						Values: []string{"Amazon Elastic Compute Cloud - Compute"},
+					},
+				},
+				{
+					Dimensions: &types.DimensionValues{
+						Key:    types.DimensionInstanceType,
+						Values: []string{instanceType},
+					},
+				},
 			},
 		},
 	}
+
+	if region != "" {
+		costInput.Filter.And = append(costInput.Filter.And, types.Expression{
+			Dimensions: &types.DimensionValues{
+				Key:    types.DimensionRegion,
+				Values: []string{region},
+			},
+		})
+	}
+
+	// Convert the lastActivity time to the desired time zone
+	location, err := time.LoadLocation("Asia/Kolkata") // Replace with the desired time zone
+	if err != nil {
+		log.Printf("Error loading location: %v\n", err)
+		return nil, err
+	}
+	lastActivity = lastActivity.In(location)
 
 	log.Println("Sending cost explorer request")
 	costResult, err := ceSvc.GetCostAndUsage(context.TODO(), costInput)
 	if err != nil {
 		log.Printf("Error getting cost and usage: %v\n", err)
 		// Return partial information without cost
-		return &EC2Instance{
+		return &models.EC2Instance{
 			InstanceId:       instanceId,
 			LastActivity:     lastActivity.Format("Jan 2, 2006 at 3:04pm"),
 			LastActivityDays: daysSinceActivity,
-			Cost:             0, // or you could use -1 to indicate no data
+			Cost:             -1, // Indicate no data
+			Region:           region,
+			InstanceType:     instanceType,
 		}, nil
 	}
-
 	log.Println("Cost result received")
 
 	var totalCost float64
@@ -119,13 +151,16 @@ func FetchInstanceDetails(instanceId string) (*EC2Instance, error) {
 	}
 	log.Printf("Total cost calculated: %f\n", totalCost)
 
-	return &EC2Instance{
+	return &models.EC2Instance{
 		InstanceId:       instanceId,
 		LastActivity:     lastActivity.Format("Jan 2, 2006 at 3:04pm"),
 		LastActivityDays: daysSinceActivity,
 		Cost:             totalCost,
+		Region:           region,
+		InstanceType:     instanceType,
 	}, nil
 }
+
 func ListInstancesHandler(w http.ResponseWriter, r *http.Request) {
 	instances, err := ListEC2Instances()
 	if err != nil {

@@ -5,6 +5,8 @@ type EC2Instance struct {
 	LastActivity     string  `json:"LastActivity"`
 	LastActivityDays int     `json:"LastActivityDays"`
 	Cost             float64 `json:"Cost"`
+	Region           string  `json:"Region"`
+	InstanceType     string  `json:"InstanceType"`
 }
 
 type AWSEfficiencyViewData struct {
