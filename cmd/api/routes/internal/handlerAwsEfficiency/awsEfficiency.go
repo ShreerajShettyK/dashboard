@@ -46,33 +46,21 @@ func FetchInstanceDetails(ec2Svc *ec2.Client, ceSvc *costexplorer.Client, cloudT
 		return nil, err
 	}
 
-	// lastActivity, err := helpers.GetLastActivity(context.Background(), cloudTrailSvc, instanceId)
-	// if err != nil {
-	// 	log.Printf("Error getting last activity: %v\n", err)
-	// 	// Fall back to launch time if there's an error
-	// 	lastActivity = *instance.LaunchTime
-	// }
-
 	lastActivity, err := helpers.FetchLastActivity(context.Background(), cloudWatchClient, instanceId)
 	if err != nil {
 		log.Printf("Error getting last activity: %v\n", err)
-		// Fall back to launch time if there's an error
 	}
-	// launchedTime := *instance.LaunchTime
-	// log.Printf("ec2 launch time is %v", launchedTime.Format("Jan 2, 2006 at 3:04pm"))
-	// log.Printf("fetched %v", lastActivity.Format("Jan 2, 2006 at 3:04pm"))
 
 	region := extractRegion(instance)
 	daysSinceActivity := int(time.Since(lastActivity).Hours() / 24)
 
-	// cost := -1.00
-	cost, err := helpers.FetchInstanceCost(ceSvc, instance.InstanceType, region)
-	if err != nil {
-		log.Printf("Error getting cost and usage: %v\n", err)
-		cost = -1 // Indicate no data
-	}
+	cost := -1.00
+	// cost, err := helpers.FetchInstanceCost(ceSvc, instance.InstanceType, region)
+	// if err != nil {
+	// 	log.Printf("Error getting cost and usage: %v\n", err)
+	// 	cost = -1 // Indicate no data
+	// }
 
-	// Convert the lastActivity time to the desired time zone
 	location, err := time.LoadLocation("Asia/Kolkata") // Replace with the desired time zone
 	if err != nil {
 		log.Printf("Error loading location: %v\n", err)
@@ -148,5 +136,5 @@ func InstanceDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Instance details sent for instance ID: %s\n", instanceId)
-	log.Printf("-----------------------------------------------------------------------------------------------------------")
+	log.Printf("------------------------------------------------------------------------------------------------")
 }

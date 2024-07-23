@@ -10,35 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 )
 
-// // GetLastActivity fetches the last activity time based on network or disk operations.
-// func FetchLastActivity(ctx context.Context, cwSvc *cloudwatch.Client, instanceId string) (time.Time, error) {
-// 	endTime := time.Now()
-// 	startTime := endTime.AddDate(0, -1, 0) // Look back 1 month
-
-// 	// Check network metrics first, then disk metrics
-// 	networkMetrics := []string{"NetworkIn", "NetworkOut"}
-// 	diskMetrics := []string{"DiskReadOps", "DiskWriteOps"}
-
-// 	// Check network metrics
-// 	for _, metric := range networkMetrics {
-// 		timestamp, err := getLastMetricActivity(ctx, cwSvc, instanceId, metric, startTime, endTime)
-// 		if err == nil && !timestamp.IsZero() {
-// 			return timestamp, nil
-// 		}
-// 	}
-
-// 	// If no network activity, check disk metrics
-// 	for _, metric := range diskMetrics {
-// 		timestamp, err := getLastMetricActivity(ctx, cwSvc, instanceId, metric, startTime, endTime)
-// 		if err == nil && !timestamp.IsZero() {
-// 			return timestamp, nil
-// 		}
-// 	}
-
-// 	// If no metric data is found, return zero time and no error
-// 	return time.Time{}, nil
-// }
-
 func FetchLastActivity(ctx context.Context, cwSvc *cloudwatch.Client, instanceId string) (time.Time, error) {
 	endTime := time.Now()
 	startTime := endTime.AddDate(0, -3, 0) // Look back 3 months

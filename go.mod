@@ -20,6 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.15 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.42.3
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.170.0
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.3 // indirect

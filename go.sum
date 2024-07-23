@@ -20,6 +20,8 @@ github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 h1:hT8rVHwugYE2lEfdFE0QWVo81lF7
 github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0/go.mod h1:8tu/lYfQfFe6IGnaOdrpVgEL2IrrDOf6/m9RQum4NkY=
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.42.3 h1:dtFepCqT+Lm3sFxracD6PvVJAMTuIKTRd3yqBpMOomk=
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.42.3/go.mod h1:p+4/sHQpT3kcfY2LruQuVgVFKd72yLnqJUayHhwfStY=
+github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.3 h1:VminN0bFfPQkaJ2MZOJh0d7+sVu0SKdZnO9FfyE1C18=
+github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.3/go.mod h1:SxcxnimuI5pVps173h7VcyuFadgOFFfl2aUXUCswoY0=
 github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3 h1:wzusAKyjqSBbOjulrFF2caN+D4ylnI14cTT8xTKm7Sw=
 github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3/go.mod h1:qgL8c9hUSWedmBiyydYvQgmzKv04NJpgHgblzWMtDOg=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.170.0 h1:zPwhEYn3Y83mnnr9QG+i6NTiAbVbcJe6RpCSJKHIQNE=
