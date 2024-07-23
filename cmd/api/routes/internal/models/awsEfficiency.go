@@ -13,3 +13,7 @@ type AWSEfficiencyViewData struct {
 	Instances       []string
 	InstanceDetails *EC2Instance
 }
+
+type Services struct {
+	Services []string
+}
