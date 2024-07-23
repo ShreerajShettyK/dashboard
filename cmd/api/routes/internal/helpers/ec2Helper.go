@@ -9,8 +9,12 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
+type Ec2API interface {
+	DescribeInstances(ctx context.Context, params *ec2.DescribeInstancesInput, optFns ...func(*ec2.Options)) (*ec2.DescribeInstancesOutput, error)
+}
+
 // ListEC2Instances lists all EC2 instance IDs.
-func ListEC2Instances(ec2Svc *ec2.Client) ([]string, error) {
+func ListEC2Instances(ec2Svc Ec2API) ([]string, error) {
 	input := &ec2.DescribeInstancesInput{}
 	result, err := ec2Svc.DescribeInstances(context.Background(), input)
 	if err != nil {
@@ -26,7 +30,7 @@ func ListEC2Instances(ec2Svc *ec2.Client) ([]string, error) {
 	return instanceIds, nil
 }
 
-func FetchEC2InstanceDetails(ec2Svc *ec2.Client, instanceId string) (*ec2Types.Instance, error) {
+func FetchEC2InstanceDetails(ec2Svc Ec2API, instanceId string) (*ec2Types.Instance, error) {
 	instanceInput := &ec2.DescribeInstancesInput{
 		InstanceIds: []string{instanceId},
 	}

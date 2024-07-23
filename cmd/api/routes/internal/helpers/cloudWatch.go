@@ -10,7 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 )
 
-func FetchLastActivity(ctx context.Context, cwSvc *cloudwatch.Client, instanceId string) (time.Time, error) {
+type CloudWatchAPI interface {
+	GetMetricData(ctx context.Context, params *cloudwatch.GetMetricDataInput, optFns ...func(*cloudwatch.Options)) (*cloudwatch.GetMetricDataOutput, error)
+}
+
+func FetchLastActivity(ctx context.Context, cwSvc CloudWatchAPI, instanceId string) (time.Time, error) {
 	endTime := time.Now()
 	startTime := endTime.AddDate(0, -3, 0) // Look back 3 months
 
@@ -36,7 +40,7 @@ func FetchLastActivity(ctx context.Context, cwSvc *cloudwatch.Client, instanceId
 	return latestActivity, nil
 }
 
-func getLastMetricActivity(ctx context.Context, cwSvc *cloudwatch.Client, instanceId, metricName string, startTime, endTime time.Time) (time.Time, error) {
+func getLastMetricActivity(ctx context.Context, cwSvc CloudWatchAPI, instanceId, metricName string, startTime, endTime time.Time) (time.Time, error) {
 	input := &cloudwatch.GetMetricDataInput{
 		StartTime: aws.Time(startTime),
 		EndTime:   aws.Time(endTime),
