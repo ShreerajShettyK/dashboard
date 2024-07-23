@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -12,7 +13,12 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
-func FetchInstanceCost(ceSvc *costexplorer.Client, instanceType ec2Types.InstanceType, region string) (float64, error) {
+// CostExplorerAPI interface to make the function more testable
+type CostExplorerAPI interface {
+	GetCostAndUsage(ctx context.Context, params *costexplorer.GetCostAndUsageInput, optFns ...func(*costexplorer.Options)) (*costexplorer.GetCostAndUsageOutput, error)
+}
+
+func FetchInstanceCost(ceSvc CostExplorerAPI, instanceType ec2Types.InstanceType, region string) (float64, error) {
 	start := time.Now().AddDate(0, 0, -30).Format("2006-01-02")
 	end := time.Now().Format("2006-01-02")
 	log.Printf("Cost range: %s to %s\n", start, end)
@@ -54,7 +60,8 @@ func FetchInstanceCost(ceSvc *costexplorer.Client, instanceType ec2Types.Instanc
 	log.Println("Sending cost explorer request")
 	costResult, err := ceSvc.GetCostAndUsage(context.Background(), costInput)
 	if err != nil {
-		return 0, err
+		log.Printf("Error fetching cost data: %v\n", err)
+		return 0, fmt.Errorf("failed to fetch cost data: %w", err)
 	}
 	log.Println("Cost result received")
 
@@ -62,7 +69,11 @@ func FetchInstanceCost(ceSvc *costexplorer.Client, instanceType ec2Types.Instanc
 	if len(costResult.ResultsByTime) > 0 {
 		for _, resultByTime := range costResult.ResultsByTime {
 			for _, group := range resultByTime.Groups {
-				cost, _ := strconv.ParseFloat(aws.ToString(group.Metrics["BlendedCost"].Amount), 64)
+				cost, err := strconv.ParseFloat(aws.ToString(group.Metrics["BlendedCost"].Amount), 64)
+				if err != nil {
+					log.Printf("Error parsing cost amount: %v\n", err)
+					return 0, fmt.Errorf("failed to parse cost data: %w", err)
+				}
 				totalCost += cost
 			}
 		}
