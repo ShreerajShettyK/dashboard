@@ -12,9 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
 
+var loadDefaultConfig = config.LoadDefaultConfig
+
 // LoadAWSConfig loads the default AWS configuration.
 func LoadAWSConfig() (aws.Config, error) {
-	cfg, err := config.LoadDefaultConfig(context.Background())
+	cfg, err := loadDefaultConfig(context.Background())
 	if err != nil {
 		log.Printf("Error loading AWS config: %v\n", err)
 		return aws.Config{}, err
