@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
@@ -34,4 +35,8 @@ func NewCostExplorerClient(cfg aws.Config) *costexplorer.Client {
 // NewCloudTrailClient creates a new CloudTrail client.
 func NewCloudTrailClient(cfg aws.Config) *cloudtrail.Client {
 	return cloudtrail.NewFromConfig(cfg)
+}
+
+func NewCloudWatchClient(cfg aws.Config) *cloudwatch.Client {
+	return cloudwatch.NewFromConfig(cfg)
 }

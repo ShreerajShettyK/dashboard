@@ -42,7 +42,7 @@
                 console.log("Instance details fetched:", details);
                 const detailsDiv = document.getElementById('instance_details');
                 detailsDiv.innerHTML = `
-                    <div class="card mt-3 ${getStatusClass(details.LastActivityDays)}" style="width:50%">
+                    <div class="card mt-3 ${getStatusClass(details.LastActivityDays)}">
                         <div class="card-body">
                             <h5 class="card-title">Instance ID: ${details.InstanceId}</h5>
                             <p class="card-text">Region: ${details.Region}</p>
@@ -79,7 +79,7 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="mt-5 text-center">AWS EC2 Efficiency Dashboard</h1>
+        <h1 class="mt-5 text-center">AWS Efficiency Dashboard</h1>
         <div class="mb-3">
             <label for="instance_id" class="form-label">Select Instance:</label>
             <select id="instance_id" class="form-select">

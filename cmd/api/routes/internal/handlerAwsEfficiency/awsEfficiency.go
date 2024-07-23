@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -23,6 +24,7 @@ var (
 	EC2Client          *ec2.Client
 	CostExplorerClient *costexplorer.Client
 	CloudTrailClient   *cloudtrail.Client
+	CloudWatchClient   *cloudwatch.Client
 )
 
 func init() {
@@ -34,25 +36,36 @@ func init() {
 	EC2Client = clients.NewEC2Client(cfg)
 	CostExplorerClient = clients.NewCostExplorerClient(cfg)
 	CloudTrailClient = clients.NewCloudTrailClient(cfg)
+	CloudWatchClient = clients.NewCloudWatchClient(cfg)
 }
 
-func FetchInstanceDetails(ec2Svc *ec2.Client, ceSvc *costexplorer.Client, cloudTrailSvc *cloudtrail.Client, instanceId string) (*models.EC2Instance, error) {
+func FetchInstanceDetails(ec2Svc *ec2.Client, ceSvc *costexplorer.Client, cloudTrailSvc *cloudtrail.Client, cloudWatchClient *cloudwatch.Client, instanceId string) (*models.EC2Instance, error) {
 	log.Printf("Fetching details for instance ID: %s\n", instanceId)
 	instance, err := helpers.FetchEC2InstanceDetails(ec2Svc, instanceId)
 	if err != nil {
 		return nil, err
 	}
 
-	lastActivity, err := helpers.GetLastActivity(context.Background(), cloudTrailSvc, instanceId)
+	// lastActivity, err := helpers.GetLastActivity(context.Background(), cloudTrailSvc, instanceId)
+	// if err != nil {
+	// 	log.Printf("Error getting last activity: %v\n", err)
+	// 	// Fall back to launch time if there's an error
+	// 	lastActivity = *instance.LaunchTime
+	// }
+
+	lastActivity, err := helpers.FetchLastActivity(context.Background(), cloudWatchClient, instanceId)
 	if err != nil {
 		log.Printf("Error getting last activity: %v\n", err)
 		// Fall back to launch time if there's an error
-		lastActivity = *instance.LaunchTime
 	}
+	// launchedTime := *instance.LaunchTime
+	// log.Printf("ec2 launch time is %v", launchedTime.Format("Jan 2, 2006 at 3:04pm"))
+	// log.Printf("fetched %v", lastActivity.Format("Jan 2, 2006 at 3:04pm"))
 
 	region := extractRegion(instance)
 	daysSinceActivity := int(time.Since(lastActivity).Hours() / 24)
 
+	// cost := -1.00
 	cost, err := helpers.FetchInstanceCost(ceSvc, instance.InstanceType, region)
 	if err != nil {
 		log.Printf("Error getting cost and usage: %v\n", err)
@@ -66,6 +79,11 @@ func FetchInstanceDetails(ec2Svc *ec2.Client, ceSvc *costexplorer.Client, cloudT
 		return nil, err
 	}
 	lastActivity = lastActivity.In(location)
+	log.Printf("cloudwatch last activity: %v", lastActivity.Format("Jan 2, 2006 at 3:04pm"))
+
+	launchedTime := *instance.LaunchTime
+	launchedTime = launchedTime.In(location)
+	log.Printf("Most recent ec2 launch time: %v", launchedTime.Format("Jan 2, 2006 at 3:04pm"))
 
 	return &models.EC2Instance{
 		InstanceId:       instanceId,
@@ -110,7 +128,7 @@ func InstanceDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	instanceDetails, err := FetchInstanceDetails(EC2Client, CostExplorerClient, CloudTrailClient, instanceId)
+	instanceDetails, err := FetchInstanceDetails(EC2Client, CostExplorerClient, CloudTrailClient, CloudWatchClient, instanceId)
 	if err != nil {
 		log.Printf("Error fetching instance details: %v\n", err)
 		// Return partial information if available
@@ -130,4 +148,5 @@ func InstanceDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Instance details sent for instance ID: %s\n", instanceId)
+	log.Printf("-----------------------------------------------------------------------------------------------------------")
 }
