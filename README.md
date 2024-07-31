@@ -1,6 +1,6 @@
 # API Dashboard
 
-This project is an API dashboard that provides endpoints for AWS metrics and Git metrics, along with AWS billing information. It uses MongoDB for data storage and Gorilla Mux for routing.
+This project is a dashboard application that provides metrics and insights for AWS and Git repositories. It uses Gorilla Mux for routing and MongoDB for database storage. The frontend is built using HTML, Bootstrap, CSS, and JavaScript, with templates.
 
 ## Getting Started
 
@@ -8,13 +8,15 @@ This project is an API dashboard that provides endpoints for AWS metrics and Git
 2. Clone the repository.
 3. Install dependencies:
 
-go mod tidy
+```go mod tidy
+```
 
 4. Set up your MongoDB connection string in the configuration.
 5. Configure AWS credentials and region.
 6. Run the program:
 
-go run main.go
+```go run main.go
+```
 
 ## Endpoints
 
