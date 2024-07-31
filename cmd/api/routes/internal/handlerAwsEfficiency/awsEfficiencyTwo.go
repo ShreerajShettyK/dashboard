@@ -26,6 +26,13 @@ var (
 	CloudWatchClient   *cloudwatch.Client
 )
 
+var (
+	ListEC2InstancesFunc        = helpers.ListEC2Instances
+	FetchEC2InstanceDetailsFunc = helpers.FetchEC2InstanceDetails
+	FetchLastActivityFunc       = helpers.FetchLastActivity
+	FetchInstanceCostFunc       = helpers.FetchInstanceCost
+)
+
 func init() {
 	cfg, err := clients.LoadAWSConfig()
 	if err != nil {
@@ -63,7 +70,7 @@ func ListServiceInstancesHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch service {
 	case "ec2":
-		instances, err = helpers.ListEC2Instances(EC2Client)
+		instances, err = ListEC2InstancesFunc(EC2Client)
 	case "elb":
 		// Implement ELB instance listing
 	case "rds":
@@ -96,12 +103,12 @@ func ListServiceInstancesHandler(w http.ResponseWriter, r *http.Request) {
 
 func FetchInstanceDetails(ec2Svc *ec2.Client, ceSvc *costexplorer.Client, cloudTrailSvc *cloudtrail.Client, cloudWatchClient *cloudwatch.Client, instanceId string) (*models.EC2Instance, error) {
 	log.Printf("Fetching details for instance ID: %s\n", instanceId)
-	instance, err := helpers.FetchEC2InstanceDetails(ec2Svc, instanceId)
+	instance, err := FetchEC2InstanceDetailsFunc(ec2Svc, instanceId)
 	if err != nil {
 		return nil, err
 	}
 
-	lastActivity, err := helpers.FetchLastActivity(context.Background(), cloudWatchClient, instanceId)
+	lastActivity, err := FetchLastActivityFunc(context.Background(), cloudWatchClient, instanceId)
 	if err != nil {
 		log.Printf("Error getting last activity: %v\n", err)
 	}
@@ -109,12 +116,12 @@ func FetchInstanceDetails(ec2Svc *ec2.Client, ceSvc *costexplorer.Client, cloudT
 	region := extractRegion(instance)
 	daysSinceActivity := int(time.Since(lastActivity).Hours() / 24)
 
-	// cost := -1.00
-	cost, err := helpers.FetchInstanceCost(ceSvc, instance.InstanceType, region)
-	if err != nil {
-		log.Printf("Error getting cost and usage: %v\n", err)
-		cost = -1 // Indicate no data
-	}
+	cost := -1.00
+	// cost, err := FetchInstanceCostFunc(ceSvc, instance.InstanceType, region)
+	// if err != nil {
+	// 	log.Printf("Error getting cost and usage: %v\n", err)
+	// 	cost = -1 // Indicate no data
+	// }
 
 	location, err := time.LoadLocation("Asia/Kolkata") // Replace with the desired time zone
 	if err != nil {

@@ -1,58 +1,64 @@
 package handlerAwsEfficiency
 
 import (
+	"context"
 	"dashboard/cmd/api/routes/internal/helpers"
 	"dashboard/cmd/api/routes/internal/models"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-// Mock clients
-// type MockEC2Client struct {
-// 	mock.Mock
-// }
+// Mock structs
+type MockEC2Client struct {
+	mock.Mock
+}
 
-// type MockCostExplorerClient struct {
-// 	mock.Mock
-// }
+type MockCostExplorerClient struct {
+	mock.Mock
+}
 
-// type MockCloudTrailClient struct {
-// 	mock.Mock
-// }
+type MockCloudTrailClient struct {
+	mock.Mock
+}
 
-// type MockCloudWatchClient struct {
-// 	mock.Mock
-// }
+type MockCloudWatchClient struct {
+	mock.Mock
+}
 
-// // Mock helper functions
-// func mockListEC2Instances(client *ec2.Client) ([]string, error) {
-// 	return []string{"i-1234567890abcdef0"}, nil
-// }
+// Mock helper functions
+func mockListEC2Instances(client *ec2.Client) ([]string, error) {
+	return []string{"i-1234567890abcdef0"}, nil
+}
 
-// func mockFetchEC2InstanceDetails(client *ec2.Client, instanceID string) (*ec2Types.Instance, error) {
-// 	return &ec2Types.Instance{
-// 		InstanceId:   aws.String(instanceID),
-// 		InstanceType: ec2Types.InstanceTypeT2Micro,
-// 		Placement: &ec2Types.Placement{
-// 			AvailabilityZone: aws.String("us-west-2a"),
-// 		},
-// 		LaunchTime: aws.Time(time.Now().Add(-24 * time.Hour)),
-// 	}, nil
-// }
+func mockFetchEC2InstanceDetails(client *ec2.Client, instanceID string) (*ec2Types.Instance, error) {
+	return &ec2Types.Instance{
+		InstanceId:   aws.String(instanceID),
+		InstanceType: ec2Types.InstanceTypeT2Micro,
+		Placement: &ec2Types.Placement{
+			AvailabilityZone: aws.String("us-west-2a"),
+		},
+		LaunchTime: aws.Time(time.Now().Add(-24 * time.Hour)),
+	}, nil
+}
 
-// func mockFetchLastActivity(ctx context.Context, client *cloudwatch.Client, instanceID string) (time.Time, error) {
-// 	return time.Now().Add(-12 * time.Hour), nil
-// }
+func mockFetchLastActivity(ctx context.Context, client *cloudwatch.Client, instanceID string) (time.Time, error) {
+	return time.Now().Add(-12 * time.Hour), nil
+}
 
-// func mockFetchInstanceCost(client *costexplorer.Client, instanceType string, region string) (float64, error) {
-// 	return 0.5, nil
-// }
+func mockFetchInstanceCost(client *costexplorer.Client, instanceType string, region string) (float64, error) {
+	return 0.5, nil
+}
 
 func TestListServicesHandler_Success(t *testing.T) {
 	// Save the original function and defer its restoration
@@ -101,42 +107,6 @@ func TestListServicesHandler_RenderError(t *testing.T) {
 	assert.Equal(t, "render error\n", rr.Body.String())
 }
 
-// func TestListServiceInstancesHandler(t *testing.T) {
-// 	// Setup
-// 	EC2Client = &ec2.Client{}
-// 	CostExplorerClient = &costexplorer.Client{}
-// 	CloudTrailClient = &cloudtrail.Client{}
-// 	CloudWatchClient = &cloudwatch.Client{}
-
-// 	// Test cases
-// 	testCases := []struct {
-// 		name           string
-// 		service        string
-// 		expectedStatus int
-// 		expectedBody   string
-// 	}{
-// 		{"Valid EC2 Service", "ec2", http.StatusOK, `[{"instance_id":"i-1234567890abcdef0"`},
-// 		{"Invalid Service", "invalid", http.StatusBadRequest, "Unsupported service"},
-// 		{"Empty Service", "", http.StatusBadRequest, "Service is required"},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			req, err := http.NewRequest("GET", "/services/"+tc.service+"/instances", nil)
-// 			assert.NoError(t, err)
-
-// 			rr := httptest.NewRecorder()
-// 			router := mux.NewRouter()
-// 			router.HandleFunc("/services/{service}/instances", ListServiceInstancesHandler)
-
-// 			router.ServeHTTP(rr, req)
-
-// 			assert.Equal(t, tc.expectedStatus, rr.Code)
-// 			assert.Contains(t, rr.Body.String(), tc.expectedBody)
-// 		})
-// 	}
-// }
-
 // func TestFetchInstanceDetails(t *testing.T) {
 // 	// Setup mock clients
 // 	mockEC2 := new(MockEC2Client)
@@ -144,47 +114,23 @@ func TestListServicesHandler_RenderError(t *testing.T) {
 // 	mockCT := new(MockCloudTrailClient)
 // 	mockCW := new(MockCloudWatchClient)
 
+// 	// Save original functions and restore after test
+// 	originalFetchEC2InstanceDetailsFunc := FetchEC2InstanceDetailsFunc
+// 	originalFetchLastActivityFunc := FetchLastActivityFunc
+// 	originalFetchInstanceCostFunc := FetchInstanceCostFunc
+// 	defer func() {
+// 		FetchEC2InstanceDetailsFunc = originalFetchEC2InstanceDetailsFunc
+// 		FetchLastActivityFunc = originalFetchLastActivityFunc
+// 		FetchInstanceCostFunc = originalFetchInstanceCostFunc
+// 	}()
+
 // 	instanceID := "i-1234567890abcdef0"
 
 // 	// Positive case
 // 	t.Run("Successful fetch", func(t *testing.T) {
-// 		mockEC2.On("DescribeInstances", mock.Anything, mock.Anything).Return(&ec2.DescribeInstancesOutput{
-// 			Reservations: []ec2Types.Reservation{
-// 				{
-// 					Instances: []ec2Types.Instance{
-// 						{
-// 							InstanceId:   aws.String(instanceID),
-// 							InstanceType: ec2Types.InstanceTypeT2Micro,
-// 							Placement: &ec2Types.Placement{
-// 								AvailabilityZone: aws.String("us-west-2a"),
-// 							},
-// 							LaunchTime: aws.Time(time.Now().Add(-24 * time.Hour)),
-// 						},
-// 					},
-// 				},
-// 			},
-// 		}, nil)
-
-// 		mockCW.On("GetMetricData", mock.Anything, mock.Anything).Return(&cloudwatch.GetMetricDataOutput{
-// 			MetricDataResults: []cloudwatch.MetricDataResult{
-// 				{
-// 					Timestamps: []time.Time{time.Now().Add(-12 * time.Hour)},
-// 					Values:     []float64{1.0},
-// 				},
-// 			},
-// 		}, nil)
-
-// 		mockCE.On("GetCostAndUsage", mock.Anything, mock.Anything).Return(&costexplorer.GetCostAndUsageOutput{
-// 			ResultsByTime: []costexplorer.ResultByTime{
-// 				{
-// 					Total: map[string]costexplorer.MetricValue{
-// 						"UnblendedCost": {
-// 							Amount: aws.String("0.5"),
-// 						},
-// 					},
-// 				},
-// 			},
-// 		}, nil)
+// 		FetchEC2InstanceDetailsFunc = mockFetchEC2InstanceDetails
+// 		FetchLastActivityFunc = mockFetchLastActivity
+// 		FetchInstanceCostFunc = mockFetchInstanceCost
 
 // 		instance, err := FetchInstanceDetails(mockEC2, mockCE, mockCT, mockCW, instanceID)
 
@@ -196,14 +142,45 @@ func TestListServicesHandler_RenderError(t *testing.T) {
 // 		assert.InDelta(t, 0.5, instance.Cost, 0.01)
 // 	})
 
-// 	// Negative case
-// 	t.Run("Failed fetch", func(t *testing.T) {
-// 		mockEC2.On("DescribeInstances", mock.Anything, mock.Anything).Return(nil, assert.AnError)
+// 	// Negative cases
+// 	t.Run("Failed EC2 instance fetch", func(t *testing.T) {
+// 		FetchEC2InstanceDetailsFunc = func(client *ec2.Client, instanceID string) (*ec2Types.Instance, error) {
+// 			return nil, errors.New("EC2 fetch error")
+// 		}
 
 // 		instance, err := FetchInstanceDetails(mockEC2, mockCE, mockCT, mockCW, instanceID)
 
 // 		assert.Error(t, err)
 // 		assert.Nil(t, instance)
+// 		assert.Contains(t, err.Error(), "EC2 fetch error")
+// 	})
+
+// 	t.Run("Failed last activity fetch", func(t *testing.T) {
+// 		FetchEC2InstanceDetailsFunc = mockFetchEC2InstanceDetails
+// 		FetchLastActivityFunc = func(ctx context.Context, client *cloudwatch.Client, instanceID string) (time.Time, error) {
+// 			return time.Time{}, errors.New("Last activity fetch error")
+// 		}
+// 		FetchInstanceCostFunc = mockFetchInstanceCost
+
+// 		instance, err := FetchInstanceDetails(mockEC2, mockCE, mockCT, mockCW, instanceID)
+
+// 		assert.NoError(t, err)
+// 		assert.NotNil(t, instance)
+// 		assert.Equal(t, "Jan 1, 0001 at 12:00am", instance.LastActivity)
+// 	})
+
+// 	t.Run("Failed instance cost fetch", func(t *testing.T) {
+// 		FetchEC2InstanceDetailsFunc = mockFetchEC2InstanceDetails
+// 		FetchLastActivityFunc = mockFetchLastActivity
+// 		FetchInstanceCostFunc = func(client *costexplorer.Client, instanceType string, region string) (float64, error) {
+// 			return 0, errors.New("Cost fetch error")
+// 		}
+
+// 		instance, err := FetchInstanceDetails(mockEC2, mockCE, mockCT, mockCW, instanceID)
+
+// 		assert.NoError(t, err)
+// 		assert.NotNil(t, instance)
+// 		assert.Equal(t, -1.0, instance.Cost)
 // 	})
 // }
 
