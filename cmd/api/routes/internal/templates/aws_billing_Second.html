@@ -31,6 +31,36 @@
             }
         }
 
+        // async function fetchServiceInstances(serviceId) {
+        //     try {
+        //         console.log(`Fetching instances for service: ${serviceId}`);
+        //         const response = await fetch(`/aws_billing/service/${serviceId}/instances`);
+        //         if (!response.ok) {
+        //             throw new Error(`HTTP error! Status: ${response.status}`);
+        //         }
+        //         const instances = await response.json();
+        //         console.log("Service instances fetched:", instances);
+        //         const instancesTable = document.getElementById('instances_table_body');
+        //         instancesTable.innerHTML = '';
+        //         instances.forEach(instance => {
+        //             const row = document.createElement('tr');
+        //             row.className = getStatusClass(instance.LastActivityDays);
+        //             row.innerHTML = `
+        //                 <td>${instance.InstanceId}</td>
+        //                 <td>${instance.Region}</td>
+        //                 <td>${instance.InstanceType}</td>
+        //                 <td>${instance.LastActivity}</td>
+        //                 <td>${instance.LastActivityDays}</td>
+        //                 <td>${instance.Cost >= 0 ? '$' + instance.Cost.toFixed(2) : 'Data not available'}</td>
+        //             `;
+        //             instancesTable.appendChild(row);
+        //         });
+        //     } catch (error) {
+        //         console.error(`Failed to fetch instances for service ${serviceId}:`, error);
+        //         document.getElementById('instances_table_body').innerHTML = `<tr><td colspan="6" class="text-danger">Error fetching instances: ${error.message}</td></tr>`;
+        //     }
+        // }
+
         async function fetchServiceInstances(serviceId) {
             try {
                 console.log(`Fetching instances for service: ${serviceId}`);
@@ -42,24 +72,37 @@
                 console.log("Service instances fetched:", instances);
                 const instancesTable = document.getElementById('instances_table_body');
                 instancesTable.innerHTML = '';
-                instances.forEach(instance => {
-                    const row = document.createElement('tr');
-                    row.className = getStatusClass(instance.LastActivityDays);
-                    row.innerHTML = `
-                        <td>${instance.InstanceId}</td>
-                        <td>${instance.Region}</td>
-                        <td>${instance.InstanceType}</td>
-                        <td>${instance.LastActivity}</td>
-                        <td>${instance.LastActivityDays}</td>
-                        <td>${instance.Cost >= 0 ? '$' + instance.Cost.toFixed(2) : 'Data not available'}</td>
-                    `;
-                    instancesTable.appendChild(row);
-                });
+
+                if (instances.length === 0) {
+                    // Display a message if no instances are found
+                    instancesTable.innerHTML = `
+                    <tr style="background-color:#ADD8E6">
+                        <td colspan="6" class="text-center text-danger">
+                            <div style="padding-top: 100px;">No instances found</div>
+                            <div style="padding-bottom: 100px;">(You do not have any instances in this account)</div>
+                        </td>
+                    </tr>`;
+                } else {
+                    instances.forEach(instance => {
+                        const row = document.createElement('tr');
+                        row.className = getStatusClass(instance.LastActivityDays);
+                        row.innerHTML = `
+                            <td>${instance.InstanceId}</td>
+                            <td>${instance.Region}</td>
+                            <td>${instance.InstanceType}</td>
+                            <td>${instance.LastActivity}</td>
+                            <td>${instance.LastActivityDays}</td>
+                            <td>${instance.Cost >= 0 ? '$' + instance.Cost.toFixed(2) : 'Data not available'}</td>
+                        `;
+                        instancesTable.appendChild(row);
+                    });
+                }
             } catch (error) {
                 console.error(`Failed to fetch instances for service ${serviceId}:`, error);
                 document.getElementById('instances_table_body').innerHTML = `<tr><td colspan="6" class="text-danger">Error fetching instances: ${error.message}</td></tr>`;
             }
         }
+
 
         function getStatusClass(days) {
             if (days <= 2) return 'instance-used';
